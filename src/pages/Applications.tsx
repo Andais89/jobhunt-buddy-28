@@ -120,32 +120,33 @@ export default function Applications() {
                     onClick={() => navigate(`/applications/${a.id}`)}
                     className="flex-1 min-w-0 text-left"
                   >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="font-medium text-sm truncate">{a.company}</p>
-                    {a.priority === "alta" && (
-                      <span className="text-[9px] uppercase tracking-editorial font-bold text-accent shrink-0">★ Alta</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{a.role}{a.location ? ` • ${a.location}` : ""}</p>
-                  {a.notes && <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1 italic">"{a.notes}"</p>}
-                  <div className="flex items-center gap-2 mt-2">
-                    <StatusBadge status={a.status} />
-                    <span className="text-[10px] text-muted-foreground">{format(parseISO(a.applied_at), "dd MMM")}</span>
-                    {a.source && <span className="text-[10px] text-muted-foreground">• {a.source}</span>}
-                  </div>
-                </button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="shrink-0 px-2 py-1 text-[10px] uppercase tracking-editorial border border-linen hover:bg-secondary">
-                    Stato
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-none">
-                    {ALL_STATUSES.map(s => (
-                      <DropdownMenuItem key={s} onClick={() => updateStatus(a.id, s)}>
-                        {STATUS_LABEL[s]}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <p className="font-medium text-sm truncate">{a.company}</p>
+                      {a.priority === "alta" && (
+                        <span className="text-[9px] uppercase tracking-editorial font-bold text-accent shrink-0">★ Alta</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{a.role}{a.location ? ` • ${a.location}` : ""}</p>
+                    {a.notes && <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1 italic">"{a.notes}"</p>}
+                    <div className="flex items-center gap-2 mt-2">
+                      <StatusBadge status={a.status} />
+                      <span className="text-[10px] text-muted-foreground">{format(parseISO(a.applied_at), "dd MMM")}</span>
+                      {a.source && <span className="text-[10px] text-muted-foreground">• {a.source}</span>}
+                    </div>
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="shrink-0 px-2.5 py-1.5 text-[10px] uppercase tracking-editorial border border-linen hover:bg-secondary rounded-xl">
+                      Stato
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl">
+                      {ALL_STATUSES.map(s => (
+                        <DropdownMenuItem key={s} onClick={() => updateStatus(a.id, s)}>
+                          {STATUS_LABEL[s]}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </li>
             ))}
           </ul>
