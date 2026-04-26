@@ -59,7 +59,7 @@ export function MobileShell({ children, title, subtitle, action }: {
 
         {/* Bottom Nav */}
         <nav className="fixed bottom-0 w-full max-w-[480px] bg-paper/95 backdrop-blur-sm border-t border-linen z-20 safe-bottom rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
-          <div className="grid grid-cols-5 px-1 pt-3 pb-2">
+          <div className="flex justify-between items-end px-4 pt-2 pb-1">
             {tabs.map(({ to, label, Icon, end }) => (
               <NavLink
                 key={to}
@@ -67,17 +67,17 @@ export function MobileShell({ children, title, subtitle, action }: {
                 end={end}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center gap-1.5 py-1.5 px-1 transition-colors rounded-xl",
+                    "flex flex-col items-center gap-1 py-2 px-1 min-w-[52px] transition-colors rounded-xl",
                     isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
                   )
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <div className={cn("p-1.5 rounded-lg transition-colors", isActive ? "bg-foreground/10" : "bg-transparent")}>
+                    <div className={cn("p-1.5 rounded-xl transition-colors", isActive ? "bg-foreground/10" : "bg-transparent")}>
                       <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
                     </div>
-                    <span className="text-[9px] uppercase tracking-editorial font-semibold leading-none">{label}</span>
+                    <span className="text-[8px] uppercase tracking-editorial font-semibold leading-none">{label}</span>
                     <div className={cn("h-1 w-1 rounded-full mt-0.5", isActive ? "bg-foreground" : "bg-transparent")} />
                   </>
                 )}
