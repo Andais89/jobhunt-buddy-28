@@ -14,7 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_at: string
+          company: string
+          contract_type: string | null
+          created_at: string
+          follow_up_at: string | null
+          id: string
+          job_url: string | null
+          location: string | null
+          notes: string | null
+          priority: Database["public"]["Enums"]["application_priority"]
+          role: string
+          salary: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          company: string
+          contract_type?: string | null
+          created_at?: string
+          follow_up_at?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["application_priority"]
+          role: string
+          salary?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          company?: string
+          contract_type?: string | null
+          created_at?: string
+          follow_up_at?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["application_priority"]
+          role?: string
+          salary?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          created_at: string
+          enrollment_deadline: string | null
+          id: string
+          name: string
+          notes: string | null
+          provider: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["course_status"]
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_deadline?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          provider?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_deadline?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          provider?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interviews: {
+        Row: {
+          application_id: string | null
+          company: string
+          created_at: string
+          id: string
+          mode: string | null
+          outcome: Database["public"]["Enums"]["interview_outcome"]
+          prep_notes: string | null
+          role: string | null
+          scheduled_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          company: string
+          created_at?: string
+          id?: string
+          mode?: string | null
+          outcome?: Database["public"]["Enums"]["interview_outcome"]
+          prep_notes?: string | null
+          role?: string | null
+          scheduled_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          company?: string
+          created_at?: string
+          id?: string
+          mode?: string | null
+          outcome?: Database["public"]["Enums"]["interview_outcome"]
+          prep_notes?: string | null
+          role?: string | null
+          scheduled_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +171,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      application_priority: "bassa" | "media" | "alta"
+      application_status:
+        | "da_valutare"
+        | "in_attesa"
+        | "colloquio"
+        | "positiva"
+        | "negativa"
+      course_status:
+        | "interessato"
+        | "iscritto"
+        | "in_corso"
+        | "completato"
+        | "rifiutato"
+      interview_outcome: "in_attesa" | "positivo" | "negativo" | "no_show"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +311,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_priority: ["bassa", "media", "alta"],
+      application_status: [
+        "da_valutare",
+        "in_attesa",
+        "colloquio",
+        "positiva",
+        "negativa",
+      ],
+      course_status: [
+        "interessato",
+        "iscritto",
+        "in_corso",
+        "completato",
+        "rifiutato",
+      ],
+      interview_outcome: ["in_attesa", "positivo", "negativo", "no_show"],
+    },
   },
 } as const
