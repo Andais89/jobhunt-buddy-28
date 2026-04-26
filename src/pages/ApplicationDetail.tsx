@@ -163,11 +163,15 @@ export default function ApplicationDetail() {
 
         {/* Form */}
         <div className="space-y-4">
-          <Field label="Azienda *">
-            <Input value={form.company ?? ""} onChange={(e) => set("company", e.target.value)} className="rounded-none" />
+          <Field label="Azienda">
+            <Input value={form.company ?? ""} onChange={(e) => set("company", e.target.value)} className="rounded-xl" placeholder="Azienda finale" />
+          </Field>
+          <Field label="Agenzia">
+            <Input value={form.agency ?? ""} onChange={(e) => set("agency", e.target.value)} className="rounded-xl" placeholder="Agenzia / intermediario" />
+            <p className="text-[10px] text-muted-foreground mt-1">Compila almeno uno tra Azienda o Agenzia.</p>
           </Field>
           <Field label="Ruolo *">
-            <Input value={form.role ?? ""} onChange={(e) => set("role", e.target.value)} className="rounded-none" />
+            <Input value={form.role ?? ""} onChange={(e) => set("role", e.target.value)} className="rounded-xl" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Località">
