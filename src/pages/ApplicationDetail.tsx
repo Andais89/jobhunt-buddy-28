@@ -78,16 +78,23 @@ export default function ApplicationDetail() {
       });
       const { data, error } = await supabase.functions.invoke("import-job", { body: { image: b64 } });
       if (error) throw error;
+      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
+        agency: data.agency ?? p.agency,
         role: data.role ?? p.role,
         location: data.location ?? p.location,
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source ?? "Screenshot",
+        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
       }));
-      toast({ title: "Screenshot letto" });
+      if (data?._warning) {
+        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
+      } else {
+        toast({ title: "Screenshot letto" });
+      }
     } catch (e: any) {
       toast({ title: "OCR non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
