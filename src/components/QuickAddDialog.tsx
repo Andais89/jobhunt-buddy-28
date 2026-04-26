@@ -77,6 +77,11 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       company: company.trim() || null,
       agency: agency.trim() || null,
       role: role.trim(),
+      location: location.trim() || null,
+      contract_type: contractType.trim() || null,
+      salary: salary.trim() || null,
+      notes: notes.trim() || null,
+      source: source.trim() || null,
       status,
       job_url: link.trim() || null,
     });
