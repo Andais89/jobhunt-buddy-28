@@ -58,7 +58,7 @@ export default function Dashboard() {
     <MobileShell title="Regia Carriera" subtitle={todaySubtitle}>
       {/* KPI grid */}
       <section className="px-6">
-        <div className="grid grid-cols-2 gap-px bg-linen border border-linen">
+        <div className="grid grid-cols-2 gap-3">
           {KPIS.map(({ key, label, emphasis }) => {
             const value = counts[key] ?? 0;
             const target = key === "totale" ? "/applications" : `/applications?status=${key}`;
@@ -66,9 +66,9 @@ export default function Dashboard() {
               <button
                 key={key}
                 onClick={() => navigate(target)}
-                className="bg-paper p-5 text-left hover:bg-secondary/40 transition-colors"
+                className="bg-card border border-linen rounded-2xl p-5 text-left hover:bg-secondary/40 transition-colors shadow-soft"
               >
-                <span className="block text-[10px] uppercase tracking-editorial text-muted-foreground mb-2">{label}</span>
+                <span className="block text-[10px] uppercase tracking-editorial text-muted-foreground mb-3">{label}</span>
                 <span className={`text-3xl font-serif tabular-nums ${emphasis === "accent" ? "text-accent" : ""}`}>
                   {String(value).padStart(2, "0")}
                 </span>
@@ -83,10 +83,10 @@ export default function Dashboard() {
         <section className="px-6 mt-8">
           <button
             onClick={() => navigate("/applications?status=in_attesa")}
-            className="w-full text-left shadow-paper border border-linen bg-card p-5 hover:bg-secondary/40 transition"
+            className="w-full text-left shadow-paper border border-linen bg-card p-5 hover:bg-secondary/40 transition rounded-2xl"
           >
             <div className="flex items-start justify-between mb-3">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 border border-foreground/20 text-[9px] uppercase tracking-editorial font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-foreground/20 text-[9px] uppercase tracking-editorial font-semibold">
                 <AlertCircle className="h-3 w-3" /> Promemoria
               </span>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />

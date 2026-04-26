@@ -68,20 +68,20 @@ export default function Applications() {
       <div className="px-6 space-y-4">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Cerca azienda, ruolo, città"
-            className="pl-9 rounded-none border-linen"
+            className="pl-10 rounded-xl border-linen bg-card"
           />
         </div>
 
         {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 pb-1">
+        <div className="flex gap-2.5 overflow-x-auto no-scrollbar -mx-6 px-6 pb-1">
           <button
             onClick={() => setParams({})}
-            className={`shrink-0 px-3 py-1 border text-[10px] uppercase tracking-editorial font-semibold transition ${
+            className={`shrink-0 px-4 py-1.5 border text-[10px] uppercase tracking-editorial font-semibold transition rounded-full ${
               !filter ? "bg-foreground text-background border-foreground" : "bg-paper text-foreground border-linen"
             }`}
           >
@@ -91,7 +91,7 @@ export default function Applications() {
             <button
               key={s}
               onClick={() => setParams({ status: s })}
-              className={`shrink-0 px-3 py-1 border text-[10px] uppercase tracking-editorial font-semibold transition ${
+              className={`shrink-0 px-4 py-1.5 border text-[10px] uppercase tracking-editorial font-semibold transition rounded-full ${
                 filter === s ? "bg-foreground text-background border-foreground" : "bg-paper text-foreground border-linen"
               }`}
             >
@@ -99,7 +99,7 @@ export default function Applications() {
             </button>
           ))}
           {filter && (
-            <button onClick={() => setParams({})} className="shrink-0 p-1 text-muted-foreground"><X className="h-4 w-4" /></button>
+            <button onClick={() => setParams({})} className="shrink-0 p-1.5 text-muted-foreground rounded-full hover:bg-secondary"><X className="h-4 w-4" /></button>
           )}
         </div>
 
@@ -112,13 +112,14 @@ export default function Applications() {
             <p className="text-xs text-muted-foreground">Tocca + in basso a destra.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-linen border-y border-linen">
+          <ul className="space-y-3">
             {filtered.map(a => (
-              <li key={a.id} className="py-3 flex gap-3 items-start">
-                <button
-                  onClick={() => navigate(`/applications/${a.id}`)}
-                  className="flex-1 min-w-0 text-left"
-                >
+              <li key={a.id} className="bg-card border border-linen rounded-2xl p-4 shadow-soft">
+                <div className="flex gap-3 items-start">
+                  <button
+                    onClick={() => navigate(`/applications/${a.id}`)}
+                    className="flex-1 min-w-0 text-left"
+                  >
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="font-medium text-sm truncate">{a.company}</p>
                     {a.priority === "alta" && (
