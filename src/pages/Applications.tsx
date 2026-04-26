@@ -47,6 +47,7 @@ export default function Applications() {
       const t = q.toLowerCase();
       r = r.filter(i =>
         i.company.toLowerCase().includes(t) ||
+        (i.agency ?? "").toLowerCase().includes(t) ||
         i.role.toLowerCase().includes(t) ||
         (i.location ?? "").toLowerCase().includes(t)
       );
