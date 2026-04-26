@@ -99,6 +99,22 @@ export default function Applications() {
     if (error) { setItems(prev); toast({ title: "Errore", description: error.message, variant: "destructive" }); }
   };
 
+  const [pendingDelete, setPendingDelete] = useState<Application | null>(null);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    const prev = items;
+    setItems(items.filter(i => i.id !== id));
+    setPendingDelete(null);
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) {
+      setItems(prev);
+      toast({ title: "Errore", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Candidatura eliminata", description: "L'elemento è stato rimosso." });
+  };
+
   return (
     <MobileShell title="Candidature" subtitle={`${filtered.length} di ${items.length}`}>
       <div className="px-6 space-y-4">
