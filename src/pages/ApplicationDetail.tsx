@@ -87,13 +87,17 @@ export default function ApplicationDetail() {
   };
 
   const save = async () => {
-    if (!user || !form.company?.trim() || !form.role?.trim()) {
-      toast({ title: "Mancano dati", description: "Azienda e ruolo richiesti.", variant: "destructive" }); return;
+    if (!user || !form.role?.trim()) {
+      toast({ title: "Mancano dati", description: "Il ruolo è richiesto.", variant: "destructive" }); return;
+    }
+    if (!form.company?.trim() && !form.agency?.trim()) {
+      toast({ title: "Mancano dati", description: "Indica almeno Azienda o Agenzia.", variant: "destructive" }); return;
     }
     setBusy(true);
     const payload = {
       user_id: user.id,
-      company: form.company!.trim(),
+      company: (form.company?.trim() || form.agency?.trim())!,
+      agency: form.agency?.trim() || null,
       role: form.role!.trim(),
       location: form.location || null,
       applied_at: form.applied_at || new Date().toISOString().slice(0, 10),
