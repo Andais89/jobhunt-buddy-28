@@ -47,7 +47,7 @@ export default function Reports() {
     <MobileShell title="Report" subtitle="Andamento">
       <div className="px-6 space-y-8">
         {/* KPI */}
-        <section className="grid grid-cols-2 gap-px bg-linen border border-linen">
+        <section className="grid grid-cols-2 gap-3">
           <Stat label="Inviate" value={total} />
           <Stat label="Risposte" value={replied} sub={`${replyRate}%`} />
           <Stat label="Positive" value={positive} sub={`${successRate}%`} accent />
@@ -103,8 +103,8 @@ export default function Reports() {
 
 function Stat({ label, value, sub, accent }: { label: string; value: number; sub?: string; accent?: boolean }) {
   return (
-    <div className="bg-paper p-5">
-      <p className="text-[10px] uppercase tracking-editorial text-muted-foreground mb-2">{label}</p>
+    <div className="bg-card border border-linen rounded-2xl p-5 shadow-soft">
+      <p className="text-[10px] uppercase tracking-editorial text-muted-foreground mb-3">{label}</p>
       <p className={`text-3xl font-serif tabular-nums ${accent ? "text-accent" : ""}`}>{String(value).padStart(2, "0")}</p>
       {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
     </div>

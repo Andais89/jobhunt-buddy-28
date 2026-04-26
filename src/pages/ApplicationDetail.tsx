@@ -136,7 +136,7 @@ export default function ApplicationDetail() {
     >
       <div className="px-6 space-y-5">
         {/* Import block */}
-        <div className="border border-linen bg-card p-4 space-y-3">
+        <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
           <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Import smart</p>
           <div className="flex gap-2">
             <Input
@@ -176,45 +176,45 @@ export default function ApplicationDetail() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Fonte">
               <Select value={form.source ?? ""} onValueChange={(v) => set("source", v)}>
-                <SelectTrigger className="rounded-none"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>{SOURCES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
             <Field label="Contratto">
-              <Input value={form.contract_type ?? ""} onChange={(e) => set("contract_type", e.target.value)} className="rounded-none" placeholder="Es. tempo indet." />
+              <Input value={form.contract_type ?? ""} onChange={(e) => set("contract_type", e.target.value)} className="rounded-xl" placeholder="Es. tempo indet." />
             </Field>
           </div>
           <Field label="Stipendio (se presente)">
-            <Input value={form.salary ?? ""} onChange={(e) => set("salary", e.target.value)} className="rounded-none" />
+            <Input value={form.salary ?? ""} onChange={(e) => set("salary", e.target.value)} className="rounded-xl" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Stato">
               <Select value={form.status ?? "in_attesa"} onValueChange={(v) => set("status", v as AppStatus)}>
-                <SelectTrigger className="rounded-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
             <Field label="Priorità">
               <Select value={form.priority ?? "media"} onValueChange={(v) => set("priority", v as AppPriority)}>
-                <SelectTrigger className="rounded-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>{PRIORITIES.map(p => <SelectItem key={p} value={p}>{PRIORITY_LABEL[p]}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
           </div>
           <Field label="Reminder follow-up">
-            <Input type="date" value={form.follow_up_at ?? ""} onChange={(e) => set("follow_up_at", e.target.value)} className="rounded-none" />
+            <Input type="date" value={form.follow_up_at ?? ""} onChange={(e) => set("follow_up_at", e.target.value)} className="rounded-xl" />
           </Field>
           <Field label="Note personali">
-            <Textarea rows={4} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} className="rounded-none resize-none" />
+            <Textarea rows={4} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} className="rounded-xl resize-none" />
           </Field>
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button onClick={save} disabled={busy} className="flex-1 rounded-none h-11">
+          <Button onClick={save} disabled={busy} className="flex-1 rounded-xl h-11">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
           </Button>
           {!isNew && (
-            <Button onClick={remove} variant="outline" className="rounded-none h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
+            <Button onClick={remove} variant="outline" className="rounded-xl h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
               <Trash2 className="h-4 w-4" />
             </Button>
           )}

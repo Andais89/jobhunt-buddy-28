@@ -64,12 +64,12 @@ export default function Courses() {
             <p className="text-xs text-muted-foreground">Tocca + per aggiungerne uno.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-linen border-y border-linen">
+          <ul className="space-y-3">
             {items.map(c => {
               const daysLeft = c.enrollment_deadline ? differenceInDays(parseISO(c.enrollment_deadline), new Date()) : null;
               const urgent = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0;
               return (
-                <li key={c.id} className="py-3">
+                <li key={c.id} className="bg-card border border-linen rounded-2xl p-4 shadow-soft">
                   <button onClick={() => { setEditing(c); setOpen(true); }} className="w-full text-left">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -137,26 +137,26 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] rounded-none border-linen">
+      <DialogContent className="max-w-[420px] rounded-2xl border-linen">
         <DialogHeader><DialogTitle className="font-serif text-2xl">{editing ? "Corso" : "Nuovo corso"}</DialogTitle></DialogHeader>
         <div className="space-y-3 mt-2">
-          <Field label="Nome *"><Input value={form.name ?? ""} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-none" /></Field>
-          <Field label="Ente"><Input value={form.provider ?? ""} onChange={(e) => setForm(p => ({ ...p, provider: e.target.value }))} className="rounded-none" /></Field>
+          <Field label="Nome *"><Input value={form.name ?? ""} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" /></Field>
+          <Field label="Ente"><Input value={form.provider ?? ""} onChange={(e) => setForm(p => ({ ...p, provider: e.target.value }))} className="rounded-xl" /></Field>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Inizio"><Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm(p => ({ ...p, start_date: e.target.value }))} className="rounded-none" /></Field>
-            <Field label="Scadenza iscriz."><Input type="date" value={form.enrollment_deadline ?? ""} onChange={(e) => setForm(p => ({ ...p, enrollment_deadline: e.target.value }))} className="rounded-none" /></Field>
+            <Field label="Inizio"><Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm(p => ({ ...p, start_date: e.target.value }))} className="rounded-xl" /></Field>
+            <Field label="Scadenza iscriz."><Input type="date" value={form.enrollment_deadline ?? ""} onChange={(e) => setForm(p => ({ ...p, enrollment_deadline: e.target.value }))} className="rounded-xl" /></Field>
           </div>
           <Field label="Stato">
             <Select value={form.status ?? "interessato"} onValueChange={(v) => setForm(p => ({ ...p, status: v as CourseStatus }))}>
-              <SelectTrigger className="rounded-none"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map(s => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
-          <Field label="Link"><Input value={form.url ?? ""} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="rounded-none" /></Field>
-          <Field label="Note"><Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm(p => ({ ...p, notes: e.target.value }))} className="rounded-none resize-none" /></Field>
+          <Field label="Link"><Input value={form.url ?? ""} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="rounded-xl" /></Field>
+          <Field label="Note"><Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm(p => ({ ...p, notes: e.target.value }))} className="rounded-xl resize-none" /></Field>
           <div className="flex gap-2 pt-2">
-            <Button onClick={save} className="flex-1 rounded-none">Salva</Button>
-            {editing && <Button variant="outline" onClick={remove} className="rounded-none border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}
+            <Button onClick={save} className="flex-1 rounded-xl">Salva</Button>
+            {editing && <Button variant="outline" onClick={remove} className="rounded-xl border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}
           </div>
         </div>
       </DialogContent>

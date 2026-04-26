@@ -58,13 +58,13 @@ export default function Auth() {
         <form onSubmit={submit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-[10px] uppercase tracking-editorial">Email</Label>
-            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-none" autoComplete="email" />
+            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl" autoComplete="email" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password" className="text-[10px] uppercase tracking-editorial">Password</Label>
-            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-none" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+            <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-xl" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
           </div>
-          <Button type="submit" disabled={busy} className="w-full rounded-none h-11">
+          <Button type="submit" disabled={busy} className="w-full rounded-xl h-11">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (mode === "signin" ? "Accedi" : "Crea account")}
           </Button>
         </form>
