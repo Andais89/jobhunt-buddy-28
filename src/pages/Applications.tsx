@@ -10,8 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 
 const ALL_STATUSES: AppStatus[] = ["da_valutare", "in_attesa", "colloquio", "positiva", "negativa"];
@@ -93,6 +97,22 @@ export default function Applications() {
     setItems(items.map(i => i.id === id ? { ...i, status } : i));
     const { error } = await supabase.from("applications").update({ status }).eq("id", id);
     if (error) { setItems(prev); toast({ title: "Errore", description: error.message, variant: "destructive" }); }
+  };
+
+  const [pendingDelete, setPendingDelete] = useState<Application | null>(null);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    const prev = items;
+    setItems(items.filter(i => i.id !== id));
+    setPendingDelete(null);
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) {
+      setItems(prev);
+      toast({ title: "Errore", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Candidatura eliminata", description: "L'elemento è stato rimosso." });
   };
 
   return (
@@ -179,14 +199,22 @@ export default function Applications() {
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger className="shrink-0 px-2.5 py-1.5 text-[10px] uppercase tracking-editorial border border-linen hover:bg-secondary rounded-xl">
-                      Stato
+                      Azioni
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-editorial text-muted-foreground">Cambia stato</DropdownMenuLabel>
                       {ALL_STATUSES.map(s => (
                         <DropdownMenuItem key={s} onClick={() => updateStatus(a.id, s)}>
                           {STATUS_LABEL[s]}
                         </DropdownMenuItem>
                       ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setPendingDelete(a)}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        Elimina candidatura
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -195,6 +223,25 @@ export default function Applications() {
           </ul>
         )}
       </div>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif">Eliminare questa candidatura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete && (
+                <>Stai per eliminare <strong>{pendingDelete.company || pendingDelete.agency}</strong> — {pendingDelete.role}. L'azione è permanente.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileShell>
   );
 }

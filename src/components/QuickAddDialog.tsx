@@ -19,12 +19,20 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
   const [company, setCompany] = useState("");
   const [agency, setAgency] = useState("");
   const [role, setRole] = useState("");
+  const [location, setLocation] = useState("");
+  const [contractType, setContractType] = useState("");
+  const [salary, setSalary] = useState("");
+  const [notes, setNotes] = useState("");
+  const [source, setSource] = useState("");
   const [status, setStatus] = useState<AppStatus>("in_attesa");
   const [link, setLink] = useState("");
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const reset = () => { setCompany(""); setAgency(""); setRole(""); setStatus("in_attesa"); setLink(""); };
+  const reset = () => {
+    setCompany(""); setAgency(""); setRole(""); setLocation(""); setContractType("");
+    setSalary(""); setNotes(""); setSource(""); setStatus("in_attesa"); setLink("");
+  };
 
   const importFromLink = async () => {
     if (!link.trim()) return;
@@ -33,8 +41,19 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { url: link.trim() } });
       if (error) throw error;
       if (data?.company) setCompany(data.company);
+      if (data?.agency) setAgency(data.agency);
       if (data?.role) setRole(data.role);
-      toast({ title: "Importato", description: "Dati estratti dall'annuncio." });
+      if (data?.location) setLocation(data.location);
+      if (data?.contract_type) setContractType(data.contract_type);
+      if (data?.salary) setSalary(data.salary);
+      if (data?.source) setSource(data.source);
+      const desc = [data?.description, data?.notes].filter(Boolean).join("\n\n");
+      if (desc) setNotes(desc);
+      if (data?._warning) {
+        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
+      } else {
+        toast({ title: "Importato", description: "Dati estratti dall'annuncio." });
+      }
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message ?? "Riprova manualmente", variant: "destructive" });
     } finally {
@@ -58,6 +77,11 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       company: company.trim() || null,
       agency: agency.trim() || null,
       role: role.trim(),
+      location: location.trim() || null,
+      contract_type: contractType.trim() || null,
+      salary: salary.trim() || null,
+      notes: notes.trim() || null,
+      source: source.trim() || null,
       status,
       job_url: link.trim() || null,
     });

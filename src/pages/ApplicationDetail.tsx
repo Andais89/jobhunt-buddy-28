@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Trash2, Sparkles, Camera, Loader2 } from "lucide-react";
 
@@ -48,16 +52,23 @@ export default function ApplicationDetail() {
     try {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { url: form.job_url } });
       if (error) throw error;
+      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
+        agency: data.agency ?? p.agency,
         role: data.role ?? p.role,
         location: data.location ?? p.location,
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source,
+        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
       }));
-      toast({ title: "Dati importati" });
+      if (data?._warning) {
+        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
+      } else {
+        toast({ title: "Dati importati" });
+      }
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
@@ -71,16 +82,23 @@ export default function ApplicationDetail() {
       });
       const { data, error } = await supabase.functions.invoke("import-job", { body: { image: b64 } });
       if (error) throw error;
+      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
+        agency: data.agency ?? p.agency,
         role: data.role ?? p.role,
         location: data.location ?? p.location,
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source ?? "Screenshot",
+        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
       }));
-      toast({ title: "Screenshot letto" });
+      if (data?._warning) {
+        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
+      } else {
+        toast({ title: "Screenshot letto" });
+      }
     } catch (e: any) {
       toast({ title: "OCR non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
@@ -121,10 +139,9 @@ export default function ApplicationDetail() {
 
   const remove = async () => {
     if (!id || isNew) return;
-    if (!confirm("Eliminare questa candidatura?")) return;
     const { error } = await supabase.from("applications").delete().eq("id", id);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Eliminata" });
+    toast({ title: "Candidatura eliminata", description: "L'elemento è stato rimosso." });
     navigate("/applications");
   };
 
@@ -222,9 +239,27 @@ export default function ApplicationDetail() {
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
           </Button>
           {!isNew && (
-            <Button onClick={remove} variant="outline" className="rounded-xl h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="rounded-xl h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-serif">Eliminare questa candidatura?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    L'azione è permanente e non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={remove} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Elimina
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </div>
