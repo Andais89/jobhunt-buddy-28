@@ -139,10 +139,9 @@ export default function ApplicationDetail() {
 
   const remove = async () => {
     if (!id || isNew) return;
-    if (!confirm("Eliminare questa candidatura?")) return;
     const { error } = await supabase.from("applications").delete().eq("id", id);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Eliminata" });
+    toast({ title: "Candidatura eliminata", description: "L'elemento è stato rimosso." });
     navigate("/applications");
   };
 
