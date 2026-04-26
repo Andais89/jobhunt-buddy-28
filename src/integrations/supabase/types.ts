@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          agency: string | null
           applied_at: string
           company: string
           contract_type: string | null
@@ -34,6 +35,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agency?: string | null
           applied_at?: string
           company: string
           contract_type?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agency?: string | null
           applied_at?: string
           company?: string
           contract_type?: string | null

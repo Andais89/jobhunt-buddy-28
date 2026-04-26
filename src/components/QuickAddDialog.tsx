@@ -17,13 +17,14 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
 }) {
   const { user } = useAuth();
   const [company, setCompany] = useState("");
+  const [agency, setAgency] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState<AppStatus>("in_attesa");
   const [link, setLink] = useState("");
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const reset = () => { setCompany(""); setRole(""); setStatus("in_attesa"); setLink(""); };
+  const reset = () => { setCompany(""); setAgency(""); setRole(""); setStatus("in_attesa"); setLink(""); };
 
   const importFromLink = async () => {
     if (!link.trim()) return;
@@ -43,14 +44,19 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
 
   const save = async () => {
     if (!user) return;
-    if (!company.trim() || !role.trim()) {
-      toast({ title: "Mancano dati", description: "Azienda e ruolo sono richiesti.", variant: "destructive" });
+    if (!company.trim() && !agency.trim()) {
+      toast({ title: "Mancano dati", description: "Indica almeno Azienda o Agenzia.", variant: "destructive" });
+      return;
+    }
+    if (!role.trim()) {
+      toast({ title: "Mancano dati", description: "Il ruolo è richiesto.", variant: "destructive" });
       return;
     }
     setSaving(true);
     const { error } = await supabase.from("applications").insert({
       user_id: user.id,
-      company: company.trim(),
+      company: company.trim() || agency.trim(),
+      agency: agency.trim() || null,
       role: role.trim(),
       status,
       job_url: link.trim() || null,
@@ -60,7 +66,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Salvata", description: `${company} • ${role}` });
+    toast({ title: "Salvata", description: `${company || agency} • ${role}` });
     reset();
     onOpenChange(false);
     onCreated?.();
@@ -88,8 +94,14 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company" className="text-[10px] uppercase tracking-editorial">Azienda *</Label>
-            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="rounded-xl" autoFocus />
+            <Label htmlFor="company" className="text-[10px] uppercase tracking-editorial">Azienda</Label>
+            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="rounded-xl" placeholder="Azienda finale" autoFocus />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="agency" className="text-[10px] uppercase tracking-editorial">Agenzia</Label>
+            <Input id="agency" value={agency} onChange={(e) => setAgency(e.target.value)} className="rounded-xl" placeholder="Agenzia / intermediario" />
+            <p className="text-[10px] text-muted-foreground">Compila almeno uno tra Azienda o Agenzia.</p>
           </div>
 
           <div className="space-y-2">

@@ -29,6 +29,7 @@ export interface Application {
   id: string;
   user_id: string;
   company: string;
+  agency: string | null;
   role: string;
   location: string | null;
   applied_at: string;

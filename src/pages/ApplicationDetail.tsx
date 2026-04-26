@@ -23,7 +23,7 @@ export default function ApplicationDetail() {
   const { user } = useAuth();
   const isNew = id === "new";
   const [form, setForm] = useState<Form>({
-    company: "", role: "", status: "in_attesa", priority: "media",
+    company: "", agency: "", role: "", status: "in_attesa", priority: "media",
     applied_at: new Date().toISOString().slice(0, 10),
   });
   const [busy, setBusy] = useState(false);
@@ -87,13 +87,17 @@ export default function ApplicationDetail() {
   };
 
   const save = async () => {
-    if (!user || !form.company?.trim() || !form.role?.trim()) {
-      toast({ title: "Mancano dati", description: "Azienda e ruolo richiesti.", variant: "destructive" }); return;
+    if (!user || !form.role?.trim()) {
+      toast({ title: "Mancano dati", description: "Il ruolo è richiesto.", variant: "destructive" }); return;
+    }
+    if (!form.company?.trim() && !form.agency?.trim()) {
+      toast({ title: "Mancano dati", description: "Indica almeno Azienda o Agenzia.", variant: "destructive" }); return;
     }
     setBusy(true);
     const payload = {
       user_id: user.id,
-      company: form.company!.trim(),
+      company: (form.company?.trim() || form.agency?.trim())!,
+      agency: form.agency?.trim() || null,
       role: form.role!.trim(),
       location: form.location || null,
       applied_at: form.applied_at || new Date().toISOString().slice(0, 10),
@@ -159,11 +163,15 @@ export default function ApplicationDetail() {
 
         {/* Form */}
         <div className="space-y-4">
-          <Field label="Azienda *">
-            <Input value={form.company ?? ""} onChange={(e) => set("company", e.target.value)} className="rounded-none" />
+          <Field label="Azienda">
+            <Input value={form.company ?? ""} onChange={(e) => set("company", e.target.value)} className="rounded-xl" placeholder="Azienda finale" />
+          </Field>
+          <Field label="Agenzia">
+            <Input value={form.agency ?? ""} onChange={(e) => set("agency", e.target.value)} className="rounded-xl" placeholder="Agenzia / intermediario" />
+            <p className="text-[10px] text-muted-foreground mt-1">Compila almeno uno tra Azienda o Agenzia.</p>
           </Field>
           <Field label="Ruolo *">
-            <Input value={form.role ?? ""} onChange={(e) => set("role", e.target.value)} className="rounded-none" />
+            <Input value={form.role ?? ""} onChange={(e) => set("role", e.target.value)} className="rounded-xl" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Località">
