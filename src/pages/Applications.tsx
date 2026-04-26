@@ -126,6 +126,9 @@ export default function Applications() {
                         <span className="text-[9px] uppercase tracking-editorial font-bold text-accent shrink-0">★ Alta</span>
                       )}
                     </div>
+                    {a.agency && (
+                      <p className="text-[10px] uppercase tracking-editorial text-muted-foreground truncate mb-0.5">via {a.agency}</p>
+                    )}
                     <p className="text-xs text-muted-foreground truncate">{a.role}{a.location ? ` • ${a.location}` : ""}</p>
                     {a.notes && <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1 italic">"{a.notes}"</p>}
                     <div className="flex items-center gap-2 mt-2">
