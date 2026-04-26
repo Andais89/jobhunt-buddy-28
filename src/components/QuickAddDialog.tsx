@@ -94,8 +94,14 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company" className="text-[10px] uppercase tracking-editorial">Azienda *</Label>
-            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="rounded-xl" autoFocus />
+            <Label htmlFor="company" className="text-[10px] uppercase tracking-editorial">Azienda</Label>
+            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="rounded-xl" placeholder="Azienda finale" autoFocus />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="agency" className="text-[10px] uppercase tracking-editorial">Agenzia</Label>
+            <Input id="agency" value={agency} onChange={(e) => setAgency(e.target.value)} className="rounded-xl" placeholder="Agenzia / intermediario" />
+            <p className="text-[10px] text-muted-foreground">Compila almeno uno tra Azienda o Agenzia.</p>
           </div>
 
           <div className="space-y-2">
