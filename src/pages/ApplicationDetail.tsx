@@ -48,16 +48,23 @@ export default function ApplicationDetail() {
     try {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { url: form.job_url } });
       if (error) throw error;
+      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
+        agency: data.agency ?? p.agency,
         role: data.role ?? p.role,
         location: data.location ?? p.location,
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source,
+        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
       }));
-      toast({ title: "Dati importati" });
+      if (data?._warning) {
+        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
+      } else {
+        toast({ title: "Dati importati" });
+      }
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
