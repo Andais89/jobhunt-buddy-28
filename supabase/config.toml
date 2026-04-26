@@ -1,1 +1,4 @@
 project_id = "irgocdpwtaoleezmprtp"
+
+[functions.import-job]
+verify_jwt = false
