@@ -23,7 +23,7 @@ export default function ApplicationDetail() {
   const { user } = useAuth();
   const isNew = id === "new";
   const [form, setForm] = useState<Form>({
-    company: "", role: "", status: "in_attesa", priority: "media",
+    company: "", agency: "", role: "", status: "in_attesa", priority: "media",
     applied_at: new Date().toISOString().slice(0, 10),
   });
   const [busy, setBusy] = useState(false);
