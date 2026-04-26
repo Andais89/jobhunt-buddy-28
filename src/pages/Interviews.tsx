@@ -76,19 +76,23 @@ function Section({ title, items, onEdit, reload, muted }: {
   return (
     <section>
       <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-3 border-b border-linen pb-2">{title}</h3>
-      <ul className={`divide-y divide-linen ${muted ? "opacity-70" : ""}`}>
+      <ul className={`space-y-3 ${muted ? "opacity-70" : ""}`}>
         {items.map(i => (
-          <li key={i.id} className="py-3 flex items-start justify-between gap-3">
-            <button onClick={() => onEdit(i)} className="flex-1 min-w-0 text-left">
-              <p className="font-medium text-sm truncate">{i.company}</p>
-              {i.role && <p className="text-xs text-muted-foreground truncate">{i.role}</p>}
+          <li key={i.id} className="bg-card border border-linen rounded-2xl p-4 shadow-soft">
+            <button onClick={() => onEdit(i)} className="w-full text-left">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{i.company}</p>
+                  {i.role && <p className="text-xs text-muted-foreground truncate">{i.role}</p>}
+                </div>
+                <span className="text-[10px] uppercase tracking-editorial font-semibold shrink-0 text-accent">
+                  {OUTCOMES.find(o => o.v === i.outcome)?.l}
+                </span>
+              </div>
               <p className="text-[11px] text-muted-foreground mt-1">
                 {format(parseISO(i.scheduled_at), "EEE dd MMM • HH:mm")}{i.mode ? ` • ${i.mode}` : ""}
               </p>
             </button>
-            <span className="text-[10px] uppercase tracking-editorial font-semibold shrink-0 text-accent">
-              {OUTCOMES.find(o => o.v === i.outcome)?.l}
-            </span>
           </li>
         ))}
       </ul>
@@ -141,30 +145,30 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] rounded-none border-linen">
+      <DialogContent className="max-w-[420px] rounded-2xl border-linen">
         <DialogHeader><DialogTitle className="font-serif text-2xl">{editing ? "Colloquio" : "Nuovo colloquio"}</DialogTitle></DialogHeader>
         <div className="space-y-3 mt-2">
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Azienda *</Label>
-            <Input value={form.company ?? ""} onChange={(e) => setForm(p => ({ ...p, company: e.target.value }))} className="rounded-none" /></div>
+            <Input value={form.company ?? ""} onChange={(e) => setForm(p => ({ ...p, company: e.target.value }))} className="rounded-xl" /></div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Posizione</Label>
-            <Input value={form.role ?? ""} onChange={(e) => setForm(p => ({ ...p, role: e.target.value }))} className="rounded-none" /></div>
+            <Input value={form.role ?? ""} onChange={(e) => setForm(p => ({ ...p, role: e.target.value }))} className="rounded-xl" /></div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Data e ora *</Label>
               <Input type="datetime-local" value={typeof form.scheduled_at === "string" ? form.scheduled_at.slice(0, 16) : ""}
-                onChange={(e) => setForm(p => ({ ...p, scheduled_at: e.target.value }))} className="rounded-none" /></div>
+                onChange={(e) => setForm(p => ({ ...p, scheduled_at: e.target.value }))} className="rounded-xl" /></div>
             <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Modalità</Label>
-              <Input value={form.mode ?? ""} onChange={(e) => setForm(p => ({ ...p, mode: e.target.value }))} className="rounded-none" placeholder="Video / In sede" /></div>
+              <Input value={form.mode ?? ""} onChange={(e) => setForm(p => ({ ...p, mode: e.target.value }))} className="rounded-xl" placeholder="Video / In sede" /></div>
           </div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Esito</Label>
             <Select value={form.outcome ?? "in_attesa"} onValueChange={(v) => setForm(p => ({ ...p, outcome: v as InterviewOutcome }))}>
-              <SelectTrigger className="rounded-none"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>{OUTCOMES.map(o => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}</SelectContent>
             </Select></div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Note preparazione</Label>
-            <Textarea rows={3} value={form.prep_notes ?? ""} onChange={(e) => setForm(p => ({ ...p, prep_notes: e.target.value }))} className="rounded-none resize-none" /></div>
+            <Textarea rows={3} value={form.prep_notes ?? ""} onChange={(e) => setForm(p => ({ ...p, prep_notes: e.target.value }))} className="rounded-xl resize-none" /></div>
           <div className="flex gap-2 pt-2">
-            <Button onClick={save} className="flex-1 rounded-none">Salva</Button>
-            {editing && <Button variant="outline" onClick={remove} className="rounded-none border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}
+            <Button onClick={save} className="flex-1 rounded-xl">Salva</Button>
+            {editing && <Button variant="outline" onClick={remove} className="rounded-xl border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}
           </div>
         </div>
       </DialogContent>
