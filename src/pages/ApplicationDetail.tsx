@@ -239,9 +239,27 @@ export default function ApplicationDetail() {
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
           </Button>
           {!isNew && (
-            <Button onClick={remove} variant="outline" className="rounded-xl h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="rounded-xl h-11 border-destructive/30 text-destructive hover:bg-destructive/5">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-serif">Eliminare questa candidatura?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    L'azione è permanente e non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={remove} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Elimina
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </div>
