@@ -38,7 +38,38 @@ export default function Applications() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    load();
+
+    const channel = supabase
+      .channel(`apps-list-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setItems((prev) => {
+            if (payload.eventType === "INSERT") {
+              const row = payload.new as Application;
+              if (prev.some(a => a.id === row.id)) return prev;
+              return [row, ...prev].sort((a, b) => (a.applied_at < b.applied_at ? 1 : -1));
+            }
+            if (payload.eventType === "UPDATE") {
+              const row = payload.new as Application;
+              return prev.map(a => (a.id === row.id ? row : a));
+            }
+            if (payload.eventType === "DELETE") {
+              const row = payload.old as Application;
+              return prev.filter(a => a.id !== row.id);
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const filtered = useMemo(() => {
     let r = items;
