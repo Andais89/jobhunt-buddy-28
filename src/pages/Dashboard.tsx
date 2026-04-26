@@ -28,14 +28,48 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    let active = true;
+    const load = async () => {
       const { data, error } = await supabase
         .from("applications")
         .select("*")
         .order("applied_at", { ascending: false });
+      if (!active) return;
       if (!error && data) setApps(data as Application[]);
       setLoading(false);
-    })();
+    };
+    load();
+
+    const channel = supabase
+      .channel(`apps-dashboard-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setApps((prev) => {
+            if (payload.eventType === "INSERT") {
+              const row = payload.new as Application;
+              if (prev.some(a => a.id === row.id)) return prev;
+              return [row, ...prev].sort((a, b) => (a.applied_at < b.applied_at ? 1 : -1));
+            }
+            if (payload.eventType === "UPDATE") {
+              const row = payload.new as Application;
+              return prev.map(a => (a.id === row.id ? row : a));
+            }
+            if (payload.eventType === "DELETE") {
+              const row = payload.old as Application;
+              return prev.filter(a => a.id !== row.id);
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const counts = useMemo(() => {
