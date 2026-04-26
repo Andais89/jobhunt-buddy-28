@@ -136,7 +136,7 @@ export default function ApplicationDetail() {
     >
       <div className="px-6 space-y-5">
         {/* Import block */}
-        <div className="border border-linen bg-card p-4 space-y-3">
+        <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
           <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Import smart</p>
           <div className="flex gap-2">
             <Input
