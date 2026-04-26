@@ -199,14 +199,22 @@ export default function Applications() {
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger className="shrink-0 px-2.5 py-1.5 text-[10px] uppercase tracking-editorial border border-linen hover:bg-secondary rounded-xl">
-                      Stato
+                      Azioni
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-editorial text-muted-foreground">Cambia stato</DropdownMenuLabel>
                       {ALL_STATUSES.map(s => (
                         <DropdownMenuItem key={s} onClick={() => updateStatus(a.id, s)}>
                           {STATUS_LABEL[s]}
                         </DropdownMenuItem>
                       ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setPendingDelete(a)}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        Elimina candidatura
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -215,6 +223,25 @@ export default function Applications() {
           </ul>
         )}
       </div>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif">Eliminare questa candidatura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete && (
+                <>Stai per eliminare <strong>{pendingDelete.company || pendingDelete.agency}</strong> — {pendingDelete.role}. L'azione è permanente.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileShell>
   );
 }
