@@ -96,7 +96,7 @@ export default function ApplicationDetail() {
     setBusy(true);
     const payload = {
       user_id: user.id,
-      company: (form.company?.trim() || form.agency?.trim())!,
+      company: form.company?.trim() || null,
       agency: form.agency?.trim() || null,
       role: form.role!.trim(),
       location: form.location || null,

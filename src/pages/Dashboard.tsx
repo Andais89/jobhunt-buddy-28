@@ -156,7 +156,7 @@ export default function Dashboard() {
                   className="w-full flex items-center justify-between text-left group"
                 >
                   <div className="min-w-0 pr-3">
-                    <p className="font-medium text-sm truncate">{a.company}</p>
+                    <p className="font-medium text-sm truncate">{a.company?.trim() || a.agency?.trim() || "—"}</p>
                     <p className="text-xs text-muted-foreground truncate">{a.role}</p>
                   </div>
                   <div className="text-right shrink-0">

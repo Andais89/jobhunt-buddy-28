@@ -28,7 +28,7 @@ export const SOURCES = ["Indeed", "LinkedIn", "Adecco", "InfoJobs", "GiGroup", "
 export interface Application {
   id: string;
   user_id: string;
-  company: string;
+  company: string | null;
   agency: string | null;
   role: string;
   location: string | null;

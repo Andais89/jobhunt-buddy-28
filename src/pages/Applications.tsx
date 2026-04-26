@@ -152,15 +152,23 @@ export default function Applications() {
                     onClick={() => navigate(`/applications/${a.id}`)}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-medium text-sm truncate">{a.company}</p>
-                      {a.priority === "alta" && (
-                        <span className="text-[9px] uppercase tracking-editorial font-bold text-accent shrink-0">★ Alta</span>
-                      )}
-                    </div>
-                    {a.agency && (
-                      <p className="text-[10px] uppercase tracking-editorial text-muted-foreground truncate mb-0.5">via {a.agency}</p>
-                    )}
+                    {(() => {
+                      const title = a.company?.trim() || a.agency?.trim() || "—";
+                      const showAgency = a.agency?.trim() && a.company?.trim() && a.agency.trim().toLowerCase() !== a.company.trim().toLowerCase();
+                      return (
+                        <>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p className="font-medium text-sm truncate">{title}</p>
+                            {a.priority === "alta" && (
+                              <span className="text-[9px] uppercase tracking-editorial font-bold text-accent shrink-0">★ Alta</span>
+                            )}
+                          </div>
+                          {showAgency && (
+                            <p className="text-[11px] text-muted-foreground truncate mb-0.5 italic">tramite {a.agency}</p>
+                          )}
+                        </>
+                      );
+                    })()}
                     <p className="text-xs text-muted-foreground truncate">{a.role}{a.location ? ` • ${a.location}` : ""}</p>
                     {a.notes && <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1 italic">"{a.notes}"</p>}
                     <div className="flex items-center gap-2 mt-2">

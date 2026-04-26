@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           agency: string | null
           applied_at: string
-          company: string
+          company: string | null
           contract_type: string | null
           created_at: string
           follow_up_at: string | null
@@ -37,7 +37,7 @@ export type Database = {
         Insert: {
           agency?: string | null
           applied_at?: string
-          company: string
+          company?: string | null
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null
@@ -56,7 +56,7 @@ export type Database = {
         Update: {
           agency?: string | null
           applied_at?: string
-          company?: string
+          company?: string | null
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null

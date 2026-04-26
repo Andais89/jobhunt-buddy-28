@@ -55,7 +55,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
     setSaving(true);
     const { error } = await supabase.from("applications").insert({
       user_id: user.id,
-      company: company.trim() || agency.trim(),
+      company: company.trim() || null,
       agency: agency.trim() || null,
       role: role.trim(),
       status,
@@ -66,7 +66,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Salvata", description: `${company || agency} • ${role}` });
+    toast({ title: "Salvata", description: `${company.trim() || agency.trim()} • ${role}` });
     reset();
     onOpenChange(false);
     onCreated?.();
