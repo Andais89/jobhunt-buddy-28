@@ -1,6 +1,9 @@
 // Estrae i dati di un annuncio da link (HTML) o screenshot (immagine base64)
 // usando Lovable AI Gateway (gemini-2.5-flash) con structured output.
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const SCHEMA = {
   type: "object",
