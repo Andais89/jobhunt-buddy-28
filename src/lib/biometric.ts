@@ -20,8 +20,29 @@ function b64ToBuf(b64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-export async function biometricAvailable(): Promise<boolean> {
+export function biometricEnvSupported(): boolean {
   if (typeof window === "undefined" || !window.PublicKeyCredential) return false;
+  // WebAuthn requires the document to share origin with all ancestors.
+  // In iframes (e.g. Lovable preview) iOS throws:
+  // "The origin of the document is not the same as its ancestors".
+  let inIframe = false;
+  try { inIframe = window.self !== window.top; } catch { inIframe = true; }
+  if (inIframe) return false;
+
+  const host = window.location.hostname;
+  const isPreviewHost =
+    host.includes("lovableproject.com") ||
+    host.includes("lovable.app") && host.includes("id-preview--");
+  if (isPreviewHost) return false;
+
+  // Must be a secure context
+  if (!window.isSecureContext) return false;
+
+  return true;
+}
+
+export async function biometricAvailable(): Promise<boolean> {
+  if (!biometricEnvSupported()) return false;
   try {
     // @ts-ignore
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
