@@ -5,11 +5,12 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   biometricAvailable,
+  biometricEnvSupported,
   biometricEnabledForUser,
   enableBiometric,
   disableBiometric,
 } from "@/lib/biometric";
-import { Fingerprint } from "lucide-react";
+import { Fingerprint, Info } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
