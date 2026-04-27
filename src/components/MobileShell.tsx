@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Briefcase, MessagesSquare, GraduationCap, BarChart3, Plus, LogOut } from "lucide-react";
+import { LayoutDashboard, Briefcase, MessagesSquare, GraduationCap, BarChart3, Plus, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { QuickAddDialog } from "@/components/QuickAddDialog";
@@ -33,6 +33,13 @@ export function MobileShell({ children, title, subtitle, action }: {
             </div>
             <div className="flex items-center gap-2">
               {action}
+              <button
+                onClick={() => navigate("/profile")}
+                aria-label="Profilo"
+                className="p-2 text-muted-foreground hover:text-foreground transition"
+              >
+                <User className="h-4 w-4" />
+              </button>
               <button
                 onClick={async () => { await signOut(); navigate("/auth"); }}
                 aria-label="Esci"
