@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { markUnlocked } from "@/lib/biometric";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
+      markUnlocked();
     } catch (e: any) {
       toast({ title: "Errore", description: e.message ?? "Riprova", variant: "destructive" });
     } finally {
