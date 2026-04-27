@@ -17,6 +17,7 @@ export default function Profile() {
   const [available, setAvailable] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const envOk = biometricEnvSupported();
 
   useEffect(() => {
     document.title = "Profilo — Regia Carriera";
@@ -26,6 +27,10 @@ export default function Profile() {
 
   const toggle = async (next: boolean) => {
     if (!user) return;
+    if (next && !available) {
+      // Silently guard: never attempt activation in unsupported environments.
+      return;
+    }
     setBusy(true);
     try {
       if (next) {
@@ -38,11 +43,21 @@ export default function Profile() {
         toast({ title: "Face ID disattivato" });
       }
     } catch (e: any) {
-      toast({ title: "Operazione annullata", description: e.message ?? "Riprova", variant: "destructive" });
+      // Friendly cancel/deny — never expose technical WebAuthn errors.
+      const msg = String(e?.name ?? "") === "NotAllowedError"
+        ? "Operazione annullata."
+        : "Non è stato possibile attivare Face ID su questo dispositivo.";
+      toast({ title: "Face ID non attivato", description: msg });
     } finally {
       setBusy(false);
     }
   };
+
+  const helper = !envOk
+    ? "Per attivare Face ID, apri l'app installata dalla schermata Home (Condividi → Aggiungi a Home)."
+    : !available
+    ? "Questo dispositivo non supporta il riconoscimento biometrico."
+    : null;
 
   return (
     <MobileShell title="Profilo" subtitle="Account & sicurezza">
@@ -66,14 +81,17 @@ export default function Profile() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {available
                   ? "Accesso rapido senza password ad ogni apertura."
-                  : "Non disponibile su questo dispositivo o browser."}
+                  : "Disponibile solo nell'app installata sulla Home."}
               </p>
             </div>
             <Switch checked={enabled} disabled={!available || busy} onCheckedChange={toggle} />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            Per usare Face ID su iPhone, installa l'app sulla schermata Home (Condividi → Aggiungi a Home).
-          </p>
+          {helper && (
+            <div className="mt-3 flex gap-2 items-start rounded-xl bg-foreground/[0.03] border border-linen px-3 py-2.5">
+              <Info className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{helper}</p>
+            </div>
+          )}
         </section>
       </div>
     </MobileShell>
