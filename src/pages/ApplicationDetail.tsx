@@ -28,7 +28,7 @@ export default function ApplicationDetail() {
   const isNew = id === "new";
   const [form, setForm] = useState<Form>({
     company: "", agency: "", role: "", status: "in_attesa", priority: "media",
-    applied_at: new Date().toISOString().slice(0, 10),
+    applied_at: new Date().toISOString().slice(0, 10), job_summary: "", work_mode: "", seniority_level: "", benefits: "", contact_email: "",
   });
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -52,7 +52,7 @@ export default function ApplicationDetail() {
     try {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { url: form.job_url } });
       if (error) throw error;
-      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
+      if (data?.error) throw new Error(data.error);
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
@@ -62,13 +62,16 @@ export default function ApplicationDetail() {
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source,
-        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
+        applied_at: data.applied_at ?? p.applied_at,
+        status: data.status ?? p.status,
+        job_summary: data.description ?? p.job_summary,
+        notes: data.notes ?? p.notes,
+        work_mode: data.work_mode ?? p.work_mode,
+        seniority_level: data.seniority_level ?? p.seniority_level,
+        benefits: data.benefits ?? p.benefits,
+        contact_email: data.contact_email ?? p.contact_email,
       }));
-      if (data?._warning) {
-        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
-      } else {
-        toast({ title: "Dati importati" });
-      }
+      toast({ title: "Dati importati" });
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
@@ -82,7 +85,7 @@ export default function ApplicationDetail() {
       });
       const { data, error } = await supabase.functions.invoke("import-job", { body: { image: b64 } });
       if (error) throw error;
-      const mergedNotes = [data.description, data.notes].filter(Boolean).join("\n\n");
+      if (data?.error) throw new Error(data.error);
       setForm(p => ({
         ...p,
         company: data.company ?? p.company,
@@ -92,13 +95,16 @@ export default function ApplicationDetail() {
         contract_type: data.contract_type ?? p.contract_type,
         salary: data.salary ?? p.salary,
         source: data.source ?? p.source ?? "Screenshot",
-        notes: mergedNotes ? (p.notes ? `${p.notes}\n\n${mergedNotes}` : mergedNotes) : p.notes,
+        applied_at: data.applied_at ?? p.applied_at,
+        status: data.status ?? p.status,
+        job_summary: data.description ?? p.job_summary,
+        notes: data.notes ?? p.notes,
+        work_mode: data.work_mode ?? p.work_mode,
+        seniority_level: data.seniority_level ?? p.seniority_level,
+        benefits: data.benefits ?? p.benefits,
+        contact_email: data.contact_email ?? p.contact_email,
       }));
-      if (data?._warning) {
-        toast({ title: "Estrazione parziale", description: data._warning, variant: "destructive" });
-      } else {
-        toast({ title: "Screenshot letto" });
-      }
+      toast({ title: "Screenshot letto" });
     } catch (e: any) {
       toast({ title: "OCR non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
@@ -123,6 +129,11 @@ export default function ApplicationDetail() {
       job_url: form.job_url || null,
       contract_type: form.contract_type || null,
       salary: form.salary || null,
+      job_summary: form.job_summary || null,
+      work_mode: form.work_mode || null,
+      seniority_level: form.seniority_level || null,
+      benefits: form.benefits || null,
+      contact_email: form.contact_email || null,
       status: (form.status || "in_attesa") as AppStatus,
       notes: form.notes || null,
       priority: (form.priority || "media") as AppPriority,
@@ -211,6 +222,23 @@ export default function ApplicationDetail() {
           </div>
           <Field label="Stipendio (se presente)">
             <Input value={form.salary ?? ""} onChange={(e) => set("salary", e.target.value)} className="rounded-xl" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Remote / Hybrid / On-site">
+              <Input value={form.work_mode ?? ""} onChange={(e) => set("work_mode", e.target.value)} className="rounded-xl" />
+            </Field>
+            <Field label="Seniority">
+              <Input value={form.seniority_level ?? ""} onChange={(e) => set("seniority_level", e.target.value)} className="rounded-xl" />
+            </Field>
+          </div>
+          <Field label="Short job description">
+            <Textarea rows={3} value={form.job_summary ?? ""} onChange={(e) => set("job_summary", e.target.value)} className="rounded-xl resize-none" />
+          </Field>
+          <Field label="Benefits">
+            <Textarea rows={2} value={form.benefits ?? ""} onChange={(e) => set("benefits", e.target.value)} className="rounded-xl resize-none" />
+          </Field>
+          <Field label="Contact email">
+            <Input type="email" value={form.contact_email ?? ""} onChange={(e) => set("contact_email", e.target.value)} className="rounded-xl" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Stato">
