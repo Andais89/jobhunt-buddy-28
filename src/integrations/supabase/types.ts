@@ -18,59 +18,74 @@ export type Database = {
         Row: {
           agency: string | null
           applied_at: string
+          benefits: string | null
           company: string | null
+          contact_email: string | null
           contract_type: string | null
           created_at: string
           follow_up_at: string | null
           id: string
+          job_summary: string | null
           job_url: string | null
           location: string | null
           notes: string | null
           priority: Database["public"]["Enums"]["application_priority"]
           role: string
           salary: string | null
+          seniority_level: string | null
           source: string | null
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
           user_id: string
+          work_mode: string | null
         }
         Insert: {
           agency?: string | null
           applied_at?: string
+          benefits?: string | null
           company?: string | null
+          contact_email?: string | null
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null
           id?: string
+          job_summary?: string | null
           job_url?: string | null
           location?: string | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["application_priority"]
           role: string
           salary?: string | null
+          seniority_level?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id: string
+          work_mode?: string | null
         }
         Update: {
           agency?: string | null
           applied_at?: string
+          benefits?: string | null
           company?: string | null
+          contact_email?: string | null
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null
           id?: string
+          job_summary?: string | null
           job_url?: string | null
           location?: string | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["application_priority"]
           role?: string
           salary?: string | null
+          seniority_level?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id?: string
+          work_mode?: string | null
         }
         Relationships: []
       }
