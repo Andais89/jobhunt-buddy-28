@@ -33,10 +33,15 @@ export interface Application {
   role: string;
   location: string | null;
   applied_at: string;
+  job_summary: string | null;
   source: string | null;
   job_url: string | null;
   contract_type: string | null;
   salary: string | null;
+  work_mode: string | null;
+  seniority_level: string | null;
+  benefits: string | null;
+  contact_email: string | null;
   status: AppStatus;
   notes: string | null;
   priority: AppPriority;

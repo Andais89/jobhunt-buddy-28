@@ -1,0 +1,6 @@
+ALTER TABLE public.applications
+ADD COLUMN IF NOT EXISTS job_summary TEXT,
+ADD COLUMN IF NOT EXISTS work_mode TEXT,
+ADD COLUMN IF NOT EXISTS seniority_level TEXT,
+ADD COLUMN IF NOT EXISTS benefits TEXT,
+ADD COLUMN IF NOT EXISTS contact_email TEXT;
