@@ -118,7 +118,25 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
   open: boolean; onOpenChange: (v: boolean) => void; editing: Interview | null; onSaved: () => void;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState<Partial<Interview>>({});
+  const [converting, setConverting] = useState(false);
+
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !editing) return;
+    setConverting(true);
+    try {
+      const res = await convertEntity("interview", editing.id, kind, user.id);
+      toast({ title: kind === "application" ? "Spostato in Candidature" : "Spostato in Corsi" });
+      onOpenChange(false);
+      onSaved();
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
