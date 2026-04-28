@@ -93,9 +93,7 @@ export function MobileShell({ children, title, subtitle, action }: {
           </div>
         </nav>
 
-        <QuickAddDialog open={quickOpen} onOpenChange={setQuickOpen} onCreated={() => {
-          if (!location.pathname.startsWith("/applications")) navigate("/applications");
-        }} />
+        <QuickAddDialog open={quickOpen} onOpenChange={setQuickOpen} />
       </div>
     </div>
   );
