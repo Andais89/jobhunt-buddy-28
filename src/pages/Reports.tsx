@@ -14,10 +14,23 @@ export default function Reports() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    let active = true;
+    const load = async () => {
       const { data } = await supabase.from("applications").select("*");
-      if (data) setApps(data as Application[]);
-    })();
+      if (active && data) setApps(data as Application[]);
+    };
+    load();
+
+    const channel = supabase
+      .channel(`apps-reports-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` },
+        () => { load(); }
+      )
+      .subscribe();
+
+    return () => { active = false; supabase.removeChannel(channel); };
   }, [user]);
 
   const total = apps.length;
