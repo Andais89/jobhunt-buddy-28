@@ -14,10 +14,16 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Trash2, Sparkles, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft } from "lucide-react";
+import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 const STATUSES: AppStatus[] = ["da_valutare", "in_attesa", "colloquio", "positiva", "negativa"];
 const PRIORITIES: AppPriority[] = ["bassa", "media", "alta"];
+const KIND_LABEL: Record<EntityKind, string> = {
+  application: "Candidatura",
+  interview: "Colloquio",
+  course: "Corso",
+};
 
 type Form = Partial<Application>;
 
