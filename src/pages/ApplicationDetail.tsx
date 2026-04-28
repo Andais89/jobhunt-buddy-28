@@ -210,6 +210,33 @@ export default function ApplicationDetail() {
           }} />
         </div>
 
+        {/* Tipo voce — convert between Application / Interview / Course */}
+        {!isNew && (
+          <div className="border border-linen bg-card p-4 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2">
+              <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+              <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Tipo voce</p>
+            </div>
+            <Select
+              value="application"
+              onValueChange={(v) => v !== "application" && convertTo(v as EntityKind)}
+              disabled={!!converting}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="application">{KIND_LABEL.application}</SelectItem>
+                <SelectItem value="interview">{KIND_LABEL.interview}</SelectItem>
+                <SelectItem value="course">{KIND_LABEL.course}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">
+              Sposta questa voce mantenendo i dati. Nessun duplicato.
+            </p>
+          </div>
+        )}
+
         {/* Form */}
         <div className="space-y-4">
           <Field label="Azienda">
