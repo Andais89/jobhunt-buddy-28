@@ -38,6 +38,7 @@ export default function ApplicationDetail() {
   });
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [converting, setConverting] = useState<EntityKind | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
