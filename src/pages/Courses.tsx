@@ -117,7 +117,25 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
   open: boolean; onOpenChange: (v: boolean) => void; editing: Course | null; onSaved: () => void;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState<Partial<Course>>({});
+  const [converting, setConverting] = useState(false);
+
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !editing) return;
+    setConverting(true);
+    try {
+      const res = await convertEntity("course", editing.id, kind, user.id);
+      toast({ title: kind === "application" ? "Spostato in Candidature" : "Spostato in Colloqui" });
+      onOpenChange(false);
+      onSaved();
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(false);
+    }
+  };
 
   useEffect(() => {
     if (open) setForm(editing ?? { name: "", provider: "", status: "interessato" });
