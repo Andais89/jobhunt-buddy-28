@@ -45,7 +45,19 @@ export default function Courses() {
     const { data } = await supabase.from("courses").select("*").order("created_at", { ascending: false });
     if (data) setItems(data as Course[]);
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    load();
+    const channel = supabase
+      .channel(`courses-list-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   return (
     <MobileShell
