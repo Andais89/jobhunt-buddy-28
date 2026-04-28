@@ -163,6 +163,20 @@ export default function ApplicationDetail() {
     navigate("/applications");
   };
 
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !id || isNew || kind === "application") return;
+    setConverting(kind);
+    try {
+      const res = await convertEntity("application", id, kind, user.id);
+      toast({ title: kind === "interview" ? "Spostata in Colloqui" : "Spostata in Corsi" });
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(null);
+    }
+  };
+
   return (
     <MobileShell
       title={isNew ? "Nuova" : "Dettaglio"}
