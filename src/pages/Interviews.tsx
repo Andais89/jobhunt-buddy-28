@@ -43,7 +43,19 @@ export default function Interviews() {
     const { data } = await supabase.from("interviews").select("*").order("scheduled_at", { ascending: true });
     if (data) setItems(data as Interview[]);
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    load();
+    const channel = supabase
+      .channel(`interviews-list-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const now = new Date();
   const upcoming = items.filter(i => isAfter(parseISO(i.scheduled_at), now));
