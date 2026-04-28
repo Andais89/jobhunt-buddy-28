@@ -198,6 +198,18 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
             </Select></div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Note preparazione</Label>
             <Textarea rows={3} value={form.prep_notes ?? ""} onChange={(e) => setForm(p => ({ ...p, prep_notes: e.target.value }))} className="rounded-xl resize-none" /></div>
+          {editing && (
+            <div className="border border-linen rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Sposta in</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("application")} className="flex-1 rounded-xl text-xs">Candidatura</Button>
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("course")} className="flex-1 rounded-xl text-xs">Corso</Button>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 pt-2">
             <Button onClick={save} className="flex-1 rounded-xl">Salva</Button>
             {editing && <Button variant="outline" onClick={remove} className="rounded-xl border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}
