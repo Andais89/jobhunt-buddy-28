@@ -190,7 +190,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
     toast({ title: "Corso salvato", description: courseName.trim() });
     reset();
     onOpenChange(false);
-    onCreated?.("corso");
+    onCreated?.();
   };
 
   const save = () => entity === "candidatura" ? saveApplication() : saveCourse();
