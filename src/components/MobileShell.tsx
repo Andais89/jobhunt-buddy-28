@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Briefcase, MessagesSquare, GraduationCap, BarChart3, Plus, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,7 +19,7 @@ export function MobileShell({ children, title, subtitle, action }: {
   const [quickOpen, setQuickOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  
 
   return (
     <div className="min-h-dvh bg-background flex justify-center">
