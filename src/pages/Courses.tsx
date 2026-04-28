@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CourseStatus } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 interface Course {
   id: string;
