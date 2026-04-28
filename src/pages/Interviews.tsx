@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InterviewOutcome } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 interface Interview {
   id: string;
@@ -43,7 +45,19 @@ export default function Interviews() {
     const { data } = await supabase.from("interviews").select("*").order("scheduled_at", { ascending: true });
     if (data) setItems(data as Interview[]);
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    load();
+    const channel = supabase
+      .channel(`interviews-list-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const now = new Date();
   const upcoming = items.filter(i => isAfter(parseISO(i.scheduled_at), now));
@@ -104,7 +118,25 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
   open: boolean; onOpenChange: (v: boolean) => void; editing: Interview | null; onSaved: () => void;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState<Partial<Interview>>({});
+  const [converting, setConverting] = useState(false);
+
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !editing) return;
+    setConverting(true);
+    try {
+      const res = await convertEntity("interview", editing.id, kind, user.id);
+      toast({ title: kind === "application" ? "Spostato in Candidature" : "Spostato in Corsi" });
+      onOpenChange(false);
+      onSaved();
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -166,6 +198,18 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
             </Select></div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Note preparazione</Label>
             <Textarea rows={3} value={form.prep_notes ?? ""} onChange={(e) => setForm(p => ({ ...p, prep_notes: e.target.value }))} className="rounded-xl resize-none" /></div>
+          {editing && (
+            <div className="border border-linen rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Sposta in</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("application")} className="flex-1 rounded-xl text-xs">Candidatura</Button>
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("course")} className="flex-1 rounded-xl text-xs">Corso</Button>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 pt-2">
             <Button onClick={save} className="flex-1 rounded-xl">Salva</Button>
             {editing && <Button variant="outline" onClick={remove} className="rounded-xl border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}

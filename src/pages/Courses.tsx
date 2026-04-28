@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CourseStatus } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 interface Course {
   id: string;
@@ -45,7 +47,19 @@ export default function Courses() {
     const { data } = await supabase.from("courses").select("*").order("created_at", { ascending: false });
     if (data) setItems(data as Course[]);
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    load();
+    const channel = supabase
+      .channel(`courses-list-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   return (
     <MobileShell
@@ -103,7 +117,25 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
   open: boolean; onOpenChange: (v: boolean) => void; editing: Course | null; onSaved: () => void;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState<Partial<Course>>({});
+  const [converting, setConverting] = useState(false);
+
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !editing) return;
+    setConverting(true);
+    try {
+      const res = await convertEntity("course", editing.id, kind, user.id);
+      toast({ title: kind === "application" ? "Spostato in Candidature" : "Spostato in Colloqui" });
+      onOpenChange(false);
+      onSaved();
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(false);
+    }
+  };
 
   useEffect(() => {
     if (open) setForm(editing ?? { name: "", provider: "", status: "interessato" });
@@ -154,6 +186,18 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
           </Field>
           <Field label="Link"><Input value={form.url ?? ""} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="rounded-xl" /></Field>
           <Field label="Note"><Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm(p => ({ ...p, notes: e.target.value }))} className="rounded-xl resize-none" /></Field>
+          {editing && (
+            <div className="border border-linen rounded-xl p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Sposta in</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("application")} className="flex-1 rounded-xl text-xs">Candidatura</Button>
+                <Button type="button" variant="outline" size="sm" disabled={converting} onClick={() => convertTo("interview")} className="flex-1 rounded-xl text-xs">Colloquio</Button>
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 pt-2">
             <Button onClick={save} className="flex-1 rounded-xl">Salva</Button>
             {editing && <Button variant="outline" onClick={remove} className="rounded-xl border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" /></Button>}

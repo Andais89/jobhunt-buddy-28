@@ -14,10 +14,16 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Trash2, Sparkles, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft } from "lucide-react";
+import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 const STATUSES: AppStatus[] = ["da_valutare", "in_attesa", "colloquio", "positiva", "negativa"];
 const PRIORITIES: AppPriority[] = ["bassa", "media", "alta"];
+const KIND_LABEL: Record<EntityKind, string> = {
+  application: "Candidatura",
+  interview: "Colloquio",
+  course: "Corso",
+};
 
 type Form = Partial<Application>;
 
@@ -32,6 +38,7 @@ export default function ApplicationDetail() {
   });
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [converting, setConverting] = useState<EntityKind | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -156,6 +163,20 @@ export default function ApplicationDetail() {
     navigate("/applications");
   };
 
+  const convertTo = async (kind: EntityKind) => {
+    if (!user || !id || isNew || kind === "application") return;
+    setConverting(kind);
+    try {
+      const res = await convertEntity("application", id, kind, user.id);
+      toast({ title: kind === "interview" ? "Spostata in Colloqui" : "Spostata in Corsi" });
+      navigate(entityRoute(res.kind, res.id));
+    } catch (e: any) {
+      toast({ title: "Conversione non riuscita", description: e.message, variant: "destructive" });
+    } finally {
+      setConverting(null);
+    }
+  };
+
   return (
     <MobileShell
       title={isNew ? "Nuova" : "Dettaglio"}
@@ -188,6 +209,33 @@ export default function ApplicationDetail() {
             const f = e.target.files?.[0]; if (f) importImage(f); e.target.value = "";
           }} />
         </div>
+
+        {/* Tipo voce — convert between Application / Interview / Course */}
+        {!isNew && (
+          <div className="border border-linen bg-card p-4 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2">
+              <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+              <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Tipo voce</p>
+            </div>
+            <Select
+              value="application"
+              onValueChange={(v) => v !== "application" && convertTo(v as EntityKind)}
+              disabled={!!converting}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="application">{KIND_LABEL.application}</SelectItem>
+                <SelectItem value="interview">{KIND_LABEL.interview}</SelectItem>
+                <SelectItem value="course">{KIND_LABEL.course}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">
+              Sposta questa voce mantenendo i dati. Nessun duplicato.
+            </p>
+          </div>
+        )}
 
         {/* Form */}
         <div className="space-y-4">

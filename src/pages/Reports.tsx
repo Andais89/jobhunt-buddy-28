@@ -9,6 +9,8 @@ import { Application } from "@/lib/types";
 export default function Reports() {
   const { user } = useAuth();
   const [apps, setApps] = useState<Application[]>([]);
+  const [coursesCount, setCoursesCount] = useState(0);
+  const [interviewsCount, setInterviewsCount] = useState(0);
 
   useEffect(() => { document.title = "Report — Regia Carriera"; }, []);
 
@@ -16,18 +18,23 @@ export default function Reports() {
     if (!user) return;
     let active = true;
     const load = async () => {
-      const { data } = await supabase.from("applications").select("*");
-      if (active && data) setApps(data as Application[]);
+      const [a, c, i] = await Promise.all([
+        supabase.from("applications").select("*"),
+        supabase.from("courses").select("id", { count: "exact", head: true }),
+        supabase.from("interviews").select("id", { count: "exact", head: true }),
+      ]);
+      if (!active) return;
+      if (a.data) setApps(a.data as Application[]);
+      setCoursesCount(c.count ?? 0);
+      setInterviewsCount(i.count ?? 0);
     };
     load();
 
     const channel = supabase
-      .channel(`apps-reports-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` },
-        () => { load(); }
-      )
+      .channel(`reports-realtime-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
 
     return () => { active = false; supabase.removeChannel(channel); };
@@ -68,6 +75,18 @@ export default function Reports() {
           <Stat label="Risposte" value={replied} sub={`${replyRate}%`} />
           <Stat label="Positive" value={positive} sub={`${successRate}%`} accent />
           <Stat label="Senza risposta" value={total - replied} />
+        </section>
+
+        {/* Breakdown by section */}
+        <section>
+          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
+            Per Sezione
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            <Stat label="Candidature" value={total} />
+            <Stat label="Colloqui" value={interviewsCount} />
+            <Stat label="Corsi" value={coursesCount} />
+          </div>
         </section>
 
         {/* Monthly bars */}
