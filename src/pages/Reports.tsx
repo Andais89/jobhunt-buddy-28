@@ -41,7 +41,10 @@ export default function Reports() {
 
   const topCompanies = useMemo(() => {
     const map = new Map<string, number>();
-    apps.forEach(a => map.set(a.company, (map.get(a.company) ?? 0) + 1));
+    apps.forEach(a => {
+      const name = (a.company?.trim() || a.agency?.trim() || "—");
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
     return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [apps]);
 
