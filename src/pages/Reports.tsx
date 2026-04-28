@@ -14,10 +14,23 @@ export default function Reports() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    let active = true;
+    const load = async () => {
       const { data } = await supabase.from("applications").select("*");
-      if (data) setApps(data as Application[]);
-    })();
+      if (active && data) setApps(data as Application[]);
+    };
+    load();
+
+    const channel = supabase
+      .channel(`apps-reports-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` },
+        () => { load(); }
+      )
+      .subscribe();
+
+    return () => { active = false; supabase.removeChannel(channel); };
   }, [user]);
 
   const total = apps.length;
@@ -28,7 +41,10 @@ export default function Reports() {
 
   const topCompanies = useMemo(() => {
     const map = new Map<string, number>();
-    apps.forEach(a => map.set(a.company, (map.get(a.company) ?? 0) + 1));
+    apps.forEach(a => {
+      const name = (a.company?.trim() || a.agency?.trim() || "—");
+      map.set(name, (map.get(name) ?? 0) + 1);
+    });
     return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [apps]);
 
