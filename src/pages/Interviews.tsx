@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { format, parseISO, isAfter, isBefore } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { InterviewOutcome } from "@/lib/types";
+import { InterviewOutcome, NOTIFY_PRESETS } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ interface Interview {
   mode: string | null;
   outcome: InterviewOutcome;
   prep_notes: string | null;
+  notify_days_before: number;
 }
 
 const OUTCOMES: { v: InterviewOutcome; l: string }[] = [
