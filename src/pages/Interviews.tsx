@@ -39,6 +39,7 @@ export default function Interviews() {
   const [items, setItems] = useState<Interview[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Interview | null>(null);
+  const [params, setParams] = useSearchParams();
 
   useEffect(() => { document.title = "Colloqui — Regia Carriera"; }, []);
 
@@ -52,34 +53,30 @@ export default function Interviews() {
     load();
     const channel = supabase
       .channel(`interviews-list-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` },
-        () => load()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  useEffect(() => {
+    const focus = params.get("focus");
+    if (focus && items.length) {
+      const it = items.find(i => i.id === focus);
+      if (it) { setEditing(it); setOpen(true); setParams({}); }
+    }
+  }, [params, items, setParams]);
 
   const now = new Date();
   const upcoming = items.filter(i => isAfter(parseISO(i.scheduled_at), now));
   const past = items.filter(i => isBefore(parseISO(i.scheduled_at), now));
 
   return (
-    <MobileShell
-      title="Colloqui"
-      subtitle={`${upcoming.length} in arrivo`}
-      action={
-        <button onClick={() => { setEditing(null); setOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground">
-          <Plus className="h-4 w-4" />
-        </button>
-      }
-    >
+    <MobileShell title="Colloqui" subtitle={`${upcoming.length} in arrivo`}
+      action={<button onClick={() => { setEditing(null); setOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground"><Plus className="h-4 w-4" /></button>}>
       <div className="px-6 space-y-8">
         <Section title="In arrivo" items={upcoming} onEdit={(i) => { setEditing(i); setOpen(true); }} reload={load} />
         <Section title="Passati" items={past} onEdit={(i) => { setEditing(i); setOpen(true); }} reload={load} muted />
       </div>
-
       <InterviewDialog open={open} onOpenChange={setOpen} editing={editing} onSaved={() => { load(); setOpen(false); }} />
     </MobileShell>
   );
@@ -144,7 +141,7 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
     if (open) {
       setForm(editing ?? {
         company: "", role: "", scheduled_at: new Date().toISOString().slice(0, 16),
-        mode: "Video", outcome: "in_attesa", prep_notes: "",
+        mode: "Video", outcome: "in_attesa", prep_notes: "", notify_days_before: 1,
       });
     }
   }, [open, editing]);
@@ -161,6 +158,7 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
       mode: form.mode || null,
       outcome: (form.outcome ?? "in_attesa") as InterviewOutcome,
       prep_notes: form.prep_notes || null,
+      notify_days_before: form.notify_days_before ?? 1,
     };
     const { error } = editing
       ? await supabase.from("interviews").update(payload).eq("id", editing.id)
@@ -197,6 +195,11 @@ function InterviewDialog({ open, onOpenChange, editing, onSaved }: {
             <Select value={form.outcome ?? "in_attesa"} onValueChange={(v) => setForm(p => ({ ...p, outcome: v as InterviewOutcome }))}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>{OUTCOMES.map(o => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}</SelectContent>
+            </Select></div>
+          <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Notifica anticipo</Label>
+            <Select value={String(form.notify_days_before ?? 1)} onValueChange={(v) => setForm(p => ({ ...p, notify_days_before: Number(v) }))}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>{NOTIFY_PRESETS.map(n => <SelectItem key={n.v} value={String(n.v)}>{n.l}</SelectItem>)}</SelectContent>
             </Select></div>
           <div className="space-y-1.5"><Label className="text-[10px] uppercase tracking-editorial">Note preparazione</Label>
             <Textarea rows={3} value={form.prep_notes ?? ""} onChange={(e) => setForm(p => ({ ...p, prep_notes: e.target.value }))} className="rounded-xl resize-none" /></div>
