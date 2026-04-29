@@ -3,7 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MobileShell } from "@/components/MobileShell";
-import { Application, AppStatus, AppPriority, STATUS_LABEL, PRIORITY_LABEL, SOURCES } from "@/lib/types";
+import {
+  Application, AppStatus, AppPriority, STATUS_LABEL, PRIORITY_LABEL, SOURCES,
+  WORK_MODES, CONTRACT_TYPES, HOURS_OPTIONS, SALARY_PERIODS,
+} from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +37,9 @@ export default function ApplicationDetail() {
   const isNew = id === "new";
   const [form, setForm] = useState<Form>({
     company: "", agency: "", role: "", status: "in_attesa", priority: "media",
-    applied_at: new Date().toISOString().slice(0, 10), job_summary: "", work_mode: "", seniority_level: "", benefits: "", contact_email: "",
+    applied_at: new Date().toISOString().slice(0, 10),
+    follow_up_days: 30,
+    salary_period: "Annuale",
   });
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -53,6 +58,29 @@ export default function ApplicationDetail() {
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm(p => ({ ...p, [k]: v }));
 
+  const applyImport = (data: any) => {
+    setForm(p => ({
+      ...p,
+      company: data.company ?? p.company,
+      agency: data.agency ?? p.agency,
+      role: data.role ?? p.role,
+      location: data.location ?? p.location,
+      contract_type: data.contract_type ?? p.contract_type,
+      salary: data.salary ?? p.salary,
+      salary_amount: data.salary_amount ?? p.salary_amount,
+      salary_period: data.salary_period ?? p.salary_period,
+      hours_week: data.hours_week ?? p.hours_week,
+      source: data.source ?? p.source,
+      applied_at: data.applied_at ?? p.applied_at,
+      status: data.status ?? p.status,
+      job_summary: data.description ?? p.job_summary,
+      notes: data.notes ?? p.notes,
+      work_mode: data.work_mode ?? p.work_mode,
+      benefits: data.benefits ?? p.benefits,
+      contact_email: data.contact_email ?? p.contact_email,
+    }));
+  };
+
   const importLink = async () => {
     if (!form.job_url) return;
     setImporting(true);
@@ -60,24 +88,7 @@ export default function ApplicationDetail() {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { url: form.job_url } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setForm(p => ({
-        ...p,
-        company: data.company ?? p.company,
-        agency: data.agency ?? p.agency,
-        role: data.role ?? p.role,
-        location: data.location ?? p.location,
-        contract_type: data.contract_type ?? p.contract_type,
-        salary: data.salary ?? p.salary,
-        source: data.source ?? p.source,
-        applied_at: data.applied_at ?? p.applied_at,
-        status: data.status ?? p.status,
-        job_summary: data.description ?? p.job_summary,
-        notes: data.notes ?? p.notes,
-        work_mode: data.work_mode ?? p.work_mode,
-        seniority_level: data.seniority_level ?? p.seniority_level,
-        benefits: data.benefits ?? p.benefits,
-        contact_email: data.contact_email ?? p.contact_email,
-      }));
+      applyImport(data);
       toast({ title: "Dati importati" });
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message, variant: "destructive" });
@@ -93,24 +104,7 @@ export default function ApplicationDetail() {
       const { data, error } = await supabase.functions.invoke("import-job", { body: { image: b64 } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setForm(p => ({
-        ...p,
-        company: data.company ?? p.company,
-        agency: data.agency ?? p.agency,
-        role: data.role ?? p.role,
-        location: data.location ?? p.location,
-        contract_type: data.contract_type ?? p.contract_type,
-        salary: data.salary ?? p.salary,
-        source: data.source ?? p.source ?? "Screenshot",
-        applied_at: data.applied_at ?? p.applied_at,
-        status: data.status ?? p.status,
-        job_summary: data.description ?? p.job_summary,
-        notes: data.notes ?? p.notes,
-        work_mode: data.work_mode ?? p.work_mode,
-        seniority_level: data.seniority_level ?? p.seniority_level,
-        benefits: data.benefits ?? p.benefits,
-        contact_email: data.contact_email ?? p.contact_email,
-      }));
+      applyImport({ ...data, source: data.source ?? "Screenshot" });
       toast({ title: "Screenshot letto" });
     } catch (e: any) {
       toast({ title: "OCR non riuscito", description: e.message, variant: "destructive" });
@@ -135,16 +129,19 @@ export default function ApplicationDetail() {
       source: form.source || null,
       job_url: form.job_url || null,
       contract_type: form.contract_type || null,
+      hours_week: form.hours_week || null,
       salary: form.salary || null,
+      salary_amount: form.salary_amount ?? null,
+      salary_period: form.salary_period || null,
       job_summary: form.job_summary || null,
       work_mode: form.work_mode || null,
-      seniority_level: form.seniority_level || null,
       benefits: form.benefits || null,
       contact_email: form.contact_email || null,
       status: (form.status || "in_attesa") as AppStatus,
       notes: form.notes || null,
       priority: (form.priority || "media") as AppPriority,
       follow_up_at: form.follow_up_at || null,
+      follow_up_days: form.follow_up_days ?? 30,
     };
     const { error } = isNew
       ? await supabase.from("applications").insert(payload)
@@ -159,7 +156,7 @@ export default function ApplicationDetail() {
     if (!id || isNew) return;
     const { error } = await supabase.from("applications").delete().eq("id", id);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Candidatura eliminata", description: "L'elemento è stato rimosso." });
+    toast({ title: "Candidatura eliminata" });
     navigate("/applications");
   };
 
@@ -188,7 +185,7 @@ export default function ApplicationDetail() {
       }
     >
       <div className="px-6 space-y-5">
-        {/* Import block */}
+        {/* Import */}
         <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
           <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Import smart</p>
           <div className="flex gap-2">
@@ -196,13 +193,13 @@ export default function ApplicationDetail() {
               placeholder="https:// link annuncio"
               value={form.job_url ?? ""}
               onChange={(e) => set("job_url", e.target.value)}
-              className="rounded-none"
+              className="rounded-xl"
             />
-            <Button type="button" variant="outline" onClick={importLink} disabled={importing || !form.job_url} className="rounded-none shrink-0">
+            <Button type="button" variant="outline" onClick={importLink} disabled={importing || !form.job_url} className="rounded-xl shrink-0">
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             </Button>
           </div>
-          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={importing} className="w-full rounded-none">
+          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={importing} className="w-full rounded-xl">
             <Camera className="h-4 w-4 mr-2" /> {importing ? "Lettura…" : "Carica screenshot (OCR)"}
           </Button>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => {
@@ -210,30 +207,21 @@ export default function ApplicationDetail() {
           }} />
         </div>
 
-        {/* Tipo voce — convert between Application / Interview / Course */}
+        {/* Tipo voce */}
         {!isNew && (
           <div className="border border-linen bg-card p-4 rounded-2xl space-y-3">
             <div className="flex items-center gap-2">
               <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
               <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Tipo voce</p>
             </div>
-            <Select
-              value="application"
-              onValueChange={(v) => v !== "application" && convertTo(v as EntityKind)}
-              disabled={!!converting}
-            >
-              <SelectTrigger className="rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
+            <Select value="application" onValueChange={(v) => v !== "application" && convertTo(v as EntityKind)} disabled={!!converting}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="application">{KIND_LABEL.application}</SelectItem>
                 <SelectItem value="interview">{KIND_LABEL.interview}</SelectItem>
                 <SelectItem value="course">{KIND_LABEL.course}</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-muted-foreground">
-              Sposta questa voce mantenendo i dati. Nessun duplicato.
-            </p>
           </div>
         )}
 
@@ -251,10 +239,10 @@ export default function ApplicationDetail() {
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Località">
-              <Input value={form.location ?? ""} onChange={(e) => set("location", e.target.value)} className="rounded-none" />
+              <Input value={form.location ?? ""} onChange={(e) => set("location", e.target.value)} className="rounded-xl" />
             </Field>
-            <Field label="Data">
-              <Input type="date" value={form.applied_at ?? ""} onChange={(e) => set("applied_at", e.target.value)} className="rounded-none" />
+            <Field label="Data candidatura">
+              <Input type="date" value={form.applied_at ?? ""} onChange={(e) => set("applied_at", e.target.value)} className="rounded-xl" />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -264,28 +252,45 @@ export default function ApplicationDetail() {
                 <SelectContent>{SOURCES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
-            <Field label="Contratto">
-              <Input value={form.contract_type ?? ""} onChange={(e) => set("contract_type", e.target.value)} className="rounded-xl" placeholder="Es. tempo indet." />
+            <Field label="Tipo contratto">
+              <Select value={form.contract_type ?? ""} onValueChange={(v) => set("contract_type", v)}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>{CONTRACT_TYPES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
             </Field>
           </div>
-          <Field label="Stipendio (se presente)">
-            <Input value={form.salary ?? ""} onChange={(e) => set("salary", e.target.value)} className="rounded-xl" />
-          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Remote / Hybrid / On-site">
-              <Input value={form.work_mode ?? ""} onChange={(e) => set("work_mode", e.target.value)} className="rounded-xl" />
+            <Field label="Modalità lavoro">
+              <Select value={form.work_mode ?? ""} onValueChange={(v) => set("work_mode", v)}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>{WORK_MODES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+              </Select>
             </Field>
-            <Field label="Seniority">
-              <Input value={form.seniority_level ?? ""} onChange={(e) => set("seniority_level", e.target.value)} className="rounded-xl" />
+            <Field label="Ore settimanali">
+              <Select value={form.hours_week ?? ""} onValueChange={(v) => set("hours_week", v)}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="—" /></SelectTrigger>
+                <SelectContent>{HOURS_OPTIONS.map(h => <SelectItem key={h} value={h}>{h} ore</SelectItem>)}</SelectContent>
+              </Select>
             </Field>
           </div>
-          <Field label="Short job description">
+          <div className="grid grid-cols-[1fr_120px] gap-3">
+            <Field label="Retribuzione (€)">
+              <Input type="number" value={form.salary_amount ?? ""} onChange={(e) => set("salary_amount", e.target.value ? Number(e.target.value) : null)} className="rounded-xl" placeholder="es. 28000" />
+            </Field>
+            <Field label="Periodo">
+              <Select value={form.salary_period ?? "Annuale"} onValueChange={(v) => set("salary_period", v)}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>{SALARY_PERIODS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field>
+          </div>
+          <Field label="Breve descrizione lavoro">
             <Textarea rows={3} value={form.job_summary ?? ""} onChange={(e) => set("job_summary", e.target.value)} className="rounded-xl resize-none" />
           </Field>
-          <Field label="Benefits">
+          <Field label="Benefit">
             <Textarea rows={2} value={form.benefits ?? ""} onChange={(e) => set("benefits", e.target.value)} className="rounded-xl resize-none" />
           </Field>
-          <Field label="Contact email">
+          <Field label="Email di contatto">
             <Input type="email" value={form.contact_email ?? ""} onChange={(e) => set("contact_email", e.target.value)} className="rounded-xl" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
@@ -302,8 +307,16 @@ export default function ApplicationDetail() {
               </Select>
             </Field>
           </div>
-          <Field label="Reminder follow-up">
-            <Input type="date" value={form.follow_up_at ?? ""} onChange={(e) => set("follow_up_at", e.target.value)} className="rounded-xl" />
+          <Field label="Promemoria follow-up automatico">
+            <Select value={String(form.follow_up_days ?? 30)} onValueChange={(v) => set("follow_up_days", Number(v))}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Dopo 1 settimana</SelectItem>
+                <SelectItem value="14">Dopo 2 settimane</SelectItem>
+                <SelectItem value="30">Dopo 1 mese</SelectItem>
+                <SelectItem value="60">Dopo 2 mesi</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
           <Field label="Note personali">
             <Textarea rows={4} value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} className="rounded-xl resize-none" />
@@ -324,9 +337,7 @@ export default function ApplicationDetail() {
               <AlertDialogContent className="rounded-2xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-serif">Eliminare questa candidatura?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    L'azione è permanente e non può essere annullata.
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>L'azione è permanente.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
