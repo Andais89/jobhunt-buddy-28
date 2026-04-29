@@ -24,6 +24,8 @@ export type Database = {
           contract_type: string | null
           created_at: string
           follow_up_at: string | null
+          follow_up_days: number
+          hours_week: string | null
           id: string
           job_summary: string | null
           job_url: string | null
@@ -32,6 +34,8 @@ export type Database = {
           priority: Database["public"]["Enums"]["application_priority"]
           role: string
           salary: string | null
+          salary_amount: number | null
+          salary_period: string | null
           seniority_level: string | null
           source: string | null
           status: Database["public"]["Enums"]["application_status"]
@@ -48,6 +52,8 @@ export type Database = {
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null
+          follow_up_days?: number
+          hours_week?: string | null
           id?: string
           job_summary?: string | null
           job_url?: string | null
@@ -56,6 +62,8 @@ export type Database = {
           priority?: Database["public"]["Enums"]["application_priority"]
           role: string
           salary?: string | null
+          salary_amount?: number | null
+          salary_period?: string | null
           seniority_level?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["application_status"]
@@ -72,6 +80,8 @@ export type Database = {
           contract_type?: string | null
           created_at?: string
           follow_up_at?: string | null
+          follow_up_days?: number
+          hours_week?: string | null
           id?: string
           job_summary?: string | null
           job_url?: string | null
@@ -80,6 +90,8 @@ export type Database = {
           priority?: Database["public"]["Enums"]["application_priority"]
           role?: string
           salary?: string | null
+          salary_amount?: number | null
+          salary_period?: string | null
           seniority_level?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["application_status"]
@@ -92,10 +104,13 @@ export type Database = {
       courses: {
         Row: {
           created_at: string
+          end_date: string | null
+          enrollment_date: string | null
           enrollment_deadline: string | null
           id: string
           name: string
           notes: string | null
+          notify_days_before: number
           provider: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["course_status"]
@@ -105,10 +120,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          end_date?: string | null
+          enrollment_date?: string | null
           enrollment_deadline?: string | null
           id?: string
           name: string
           notes?: string | null
+          notify_days_before?: number
           provider?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["course_status"]
@@ -118,10 +136,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          end_date?: string | null
+          enrollment_date?: string | null
           enrollment_deadline?: string | null
           id?: string
           name?: string
           notes?: string | null
+          notify_days_before?: number
           provider?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["course_status"]
@@ -138,6 +159,7 @@ export type Database = {
           created_at: string
           id: string
           mode: string | null
+          notify_days_before: number
           outcome: Database["public"]["Enums"]["interview_outcome"]
           prep_notes: string | null
           role: string | null
@@ -151,6 +173,7 @@ export type Database = {
           created_at?: string
           id?: string
           mode?: string | null
+          notify_days_before?: number
           outcome?: Database["public"]["Enums"]["interview_outcome"]
           prep_notes?: string | null
           role?: string | null
@@ -164,6 +187,7 @@ export type Database = {
           created_at?: string
           id?: string
           mode?: string | null
+          notify_days_before?: number
           outcome?: Database["public"]["Enums"]["interview_outcome"]
           prep_notes?: string | null
           role?: string | null

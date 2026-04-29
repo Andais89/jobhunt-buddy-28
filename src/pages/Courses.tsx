@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CourseStatus } from "@/lib/types";
+import { CourseStatus, NOTIFY_PRESETS } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +21,10 @@ interface Course {
   name: string;
   provider: string | null;
   start_date: string | null;
+  end_date: string | null;
+  enrollment_date: string | null;
   enrollment_deadline: string | null;
+  notify_days_before: number;
   status: CourseStatus;
   notes: string | null;
   url: string | null;
@@ -39,38 +43,38 @@ export default function Courses() {
   const [items, setItems] = useState<Course[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
+  const [params, setParams] = useSearchParams();
 
   useEffect(() => { document.title = "Corsi — Regia Carriera"; }, []);
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("courses").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("courses").select("*").order("start_date", { ascending: false, nullsFirst: false });
     if (data) setItems(data as Course[]);
   };
+
   useEffect(() => {
     if (!user) return;
     load();
     const channel = supabase
       .channel(`courses-list-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` },
-        () => load()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  // Deep-link focus
+  useEffect(() => {
+    const focus = params.get("focus");
+    if (focus && items.length) {
+      const item = items.find(i => i.id === focus);
+      if (item) { setEditing(item); setOpen(true); setParams({}); }
+    }
+  }, [params, items, setParams]);
+
   return (
-    <MobileShell
-      title="Corsi"
-      subtitle={`${items.length} totali`}
-      action={
-        <button onClick={() => { setEditing(null); setOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground">
-          <Plus className="h-4 w-4" />
-        </button>
-      }
-    >
+    <MobileShell title="Corsi" subtitle={`${items.length} totali`}
+      action={<button onClick={() => { setEditing(null); setOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground"><Plus className="h-4 w-4" /></button>}>
       <div className="px-6">
         {items.length === 0 ? (
           <div className="text-center py-16">
@@ -93,6 +97,10 @@ export default function Courses() {
                       <span className="text-[10px] uppercase tracking-editorial font-semibold shrink-0">
                         {STATUSES.find(s => s.v === c.status)?.l}
                       </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                      {c.start_date && <p className="text-[11px] text-muted-foreground">Inizio: {format(parseISO(c.start_date), "dd MMM yyyy")}</p>}
+                      {c.end_date && <p className="text-[11px] text-muted-foreground">Fine: {format(parseISO(c.end_date), "dd MMM yyyy")}</p>}
                     </div>
                     {c.enrollment_deadline && (
                       <p className={`text-[11px] mt-1 ${urgent ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
@@ -138,7 +146,11 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
   };
 
   useEffect(() => {
-    if (open) setForm(editing ?? { name: "", provider: "", status: "interessato" });
+    if (open) setForm(editing ?? {
+      name: "", provider: "", status: "interessato",
+      enrollment_date: new Date().toISOString().slice(0, 10),
+      notify_days_before: 1,
+    });
   }, [open, editing]);
 
   const save = async () => {
@@ -148,7 +160,10 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
       name: form.name.trim(),
       provider: form.provider || null,
       start_date: form.start_date || null,
+      end_date: form.end_date || null,
+      enrollment_date: form.enrollment_date || null,
       enrollment_deadline: form.enrollment_deadline || null,
+      notify_days_before: form.notify_days_before ?? 1,
       status: (form.status ?? "interessato") as CourseStatus,
       notes: form.notes || null,
       url: form.url || null,
@@ -169,19 +184,29 @@ function CourseDialog({ open, onOpenChange, editing, onSaved }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] rounded-2xl border-linen">
+      <DialogContent className="max-w-[420px] rounded-2xl border-linen max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="font-serif text-2xl">{editing ? "Corso" : "Nuovo corso"}</DialogTitle></DialogHeader>
         <div className="space-y-3 mt-2">
-          <Field label="Nome *"><Input value={form.name ?? ""} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" /></Field>
-          <Field label="Ente"><Input value={form.provider ?? ""} onChange={(e) => setForm(p => ({ ...p, provider: e.target.value }))} className="rounded-xl" /></Field>
+          <Field label="Nome corso *"><Input value={form.name ?? ""} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" /></Field>
+          <Field label="Ente / Scuola"><Input value={form.provider ?? ""} onChange={(e) => setForm(p => ({ ...p, provider: e.target.value }))} className="rounded-xl" /></Field>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Inizio"><Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm(p => ({ ...p, start_date: e.target.value }))} className="rounded-xl" /></Field>
+            <Field label="Data inizio"><Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm(p => ({ ...p, start_date: e.target.value }))} className="rounded-xl" /></Field>
+            <Field label="Data fine"><Input type="date" value={form.end_date ?? ""} onChange={(e) => setForm(p => ({ ...p, end_date: e.target.value }))} className="rounded-xl" /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Data iscrizione"><Input type="date" value={form.enrollment_date ?? ""} onChange={(e) => setForm(p => ({ ...p, enrollment_date: e.target.value }))} className="rounded-xl" /></Field>
             <Field label="Scadenza iscriz."><Input type="date" value={form.enrollment_deadline ?? ""} onChange={(e) => setForm(p => ({ ...p, enrollment_deadline: e.target.value }))} className="rounded-xl" /></Field>
           </div>
           <Field label="Stato">
             <Select value={form.status ?? "interessato"} onValueChange={(v) => setForm(p => ({ ...p, status: v as CourseStatus }))}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map(s => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
+            </Select>
+          </Field>
+          <Field label="Notifica anticipo">
+            <Select value={String(form.notify_days_before ?? 1)} onValueChange={(v) => setForm(p => ({ ...p, notify_days_before: Number(v) }))}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>{NOTIFY_PRESETS.map(n => <SelectItem key={n.v} value={String(n.v)}>{n.l}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
           <Field label="Link"><Input value={form.url ?? ""} onChange={(e) => setForm(p => ({ ...p, url: e.target.value }))} className="rounded-xl" /></Field>
