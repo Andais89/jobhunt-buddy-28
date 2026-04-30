@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MobileShell } from "@/components/MobileShell";
 import { Application, AppStatus, STATUS_LABEL } from "@/lib/types";
 import { Bell, ChevronRight } from "lucide-react";
-import { buildNotifications, AppNotification } from "@/lib/notifications";
+import { buildNotifications, AppNotification, showLocalNotification, pushEnabled } from "@/lib/notifications";
 
 const KPIS: { key: AppStatus | "totale"; label: string; emphasis?: "accent" | "muted" }[] = [
   { key: "totale", label: "Totali" },
@@ -41,7 +41,7 @@ export default function Dashboard() {
     let active = true;
     const load = async () => {
       const [a, i, c] = await Promise.all([
-        supabase.from("applications").select("*").order("applied_at", { ascending: false }),
+        supabase.from("applications").select("*").is("archived_at", null).order("applied_at", { ascending: false }),
         supabase.from("interviews").select("id,company,role,scheduled_at,outcome,notify_days_before"),
         supabase.from("courses").select("id,name,provider,start_date,enrollment_deadline,status,notify_days_before"),
       ]);
@@ -73,6 +73,12 @@ export default function Dashboard() {
     () => buildNotifications(apps as any, interviews as any, courses as any),
     [apps, interviews, courses]
   );
+
+  // Trigger native push for urgent items (only if user enabled it)
+  useEffect(() => {
+    if (!pushEnabled()) return;
+    notifications.filter(n => n.urgent).forEach(showLocalNotification);
+  }, [notifications]);
 
   const recent = apps.slice(0, 4);
   const todaySubtitle = format(new Date(), "MMM yyyy").toUpperCase();
