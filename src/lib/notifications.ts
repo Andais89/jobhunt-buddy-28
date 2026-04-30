@@ -2,7 +2,26 @@
 // — promemoria follow-up (usa follow_up_at calcolato dal DB tramite trigger)
 // — colloqui imminenti con anticipo notify_days_before
 // — corsi imminenti con anticipo notify_days_before
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays, parseISO, isValid } from "date-fns";
+
+/**
+ * Parse robusto di date in formato ISO YYYY-MM-DD (o ISO completo).
+ * Ritorna null per input mancanti, formato errato o date impossibili.
+ * NON usa `new Date(string)` su stringhe ambigue.
+ */
+function safeParseISODate(input: string | null | undefined): Date | null {
+  if (!input || typeof input !== "string") return null;
+  // YYYY-MM-DD
+  const m = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const dt = parseISO(input.length === 10 ? input : input.slice(0, 10));
+  if (!isValid(dt)) return null;
+  // Catch rollover (es. 31 feb → 3 marzo)
+  if (dt.getUTCDate() !== d || dt.getUTCMonth() + 1 !== mo || dt.getUTCFullYear() !== y) return null;
+  return dt;
+}
 
 export type NotificationKind = "follow_up" | "interview" | "course";
 
@@ -57,13 +76,27 @@ export function buildNotifications(
   for (const a of apps) {
     if (a.archived_at) continue; // Archiviate → niente promemoria
     if (!["in_attesa", "da_valutare"].includes(a.status)) continue; // Solo stati attivi
-    // Usa follow_up_at calcolato dal DB se presente, altrimenti fallback applied + days
-    const target = a.follow_up_at
-      ? parseISO(a.follow_up_at)
-      : new Date(parseISO(a.applied_at).getTime() + (a.follow_up_days ?? 30) * 86400000);
+
+    // Validazione applied_at: deve esistere, essere ISO valido, non nel futuro
+    const applied = safeParseISODate(a.applied_at);
+    if (!applied) continue;
+    if (applied.getTime() > today.getTime()) continue; // Date nel futuro → ignora
+
+    // Calcolo target follow-up
+    const days_cfg = a.follow_up_days ?? 30;
+    const fromDb = a.follow_up_at ? safeParseISODate(a.follow_up_at) : null;
+    const target = fromDb ?? new Date(applied.getTime() + days_cfg * 86400000);
+
+    // Quanti giorni sono passati dall'applied_at
+    const elapsedSinceApplied = differenceInCalendarDays(today, applied);
+    // Safety cap: se i giorni dall'applied superano 120, dato sospetto → non mostrare
+    if (elapsedSinceApplied > 120) continue;
+
     const days = differenceInCalendarDays(target, today);
     if (days <= 0) {
       const elapsed = -days;
+      // Safety cap anche sul ritardo follow-up
+      if (elapsed > 120) continue;
       out.push({
         id: `app-${a.id}`,
         kind: "follow_up",
