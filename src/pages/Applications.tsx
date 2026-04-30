@@ -53,6 +53,7 @@ export default function Applications() {
     const { data, error } = await supabase
       .from("applications")
       .select("*")
+      .is("archived_at", null)
       .order("applied_at", { ascending: false })
       .order("created_at", { ascending: false });
     if (!error && data) setItems(data as Application[]);
