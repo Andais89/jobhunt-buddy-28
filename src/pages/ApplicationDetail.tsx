@@ -364,6 +364,21 @@ export default function ApplicationDetail() {
             </AlertDialog>
           )}
         </div>
+
+        {!isNew && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={toggleArchive}
+            className="w-full rounded-xl h-11"
+          >
+            {form.archived_at ? (
+              <><RotateCcw className="h-4 w-4 mr-2" /> Ripristina nelle attive</>
+            ) : (
+              <><ArchiveIcon className="h-4 w-4 mr-2" /> Archivia candidatura</>
+            )}
+          </Button>
+        )}
       </div>
     </MobileShell>
   );
