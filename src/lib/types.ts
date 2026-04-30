@@ -76,6 +76,7 @@ export interface Application {
   priority: AppPriority;
   follow_up_at: string | null;
   follow_up_days: number;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 }

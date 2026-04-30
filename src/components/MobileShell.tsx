@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Briefcase, MessagesSquare, GraduationCap, BarChart3, Plus, LogOut, User } from "lucide-react";
+import { LayoutDashboard, Briefcase, Archive, GraduationCap, BarChart3, Plus, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { QuickAddDialog } from "@/components/QuickAddDialog";
@@ -8,7 +8,7 @@ import { QuickAddDialog } from "@/components/QuickAddDialog";
 const tabs = [
   { to: "/", label: "Dashboard", Icon: LayoutDashboard, end: true },
   { to: "/applications", label: "Candidature", Icon: Briefcase },
-  { to: "/interviews", label: "Colloqui", Icon: MessagesSquare },
+  { to: "/archive", label: "Archivio", Icon: Archive },
   { to: "/courses", label: "Corsi", Icon: GraduationCap },
   { to: "/reports", label: "Report", Icon: BarChart3 },
 ];

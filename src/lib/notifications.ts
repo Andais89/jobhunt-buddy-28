@@ -1,5 +1,5 @@
 // In-app notification feed: deriva dai dati esistenti
-// — promemoria follow-up dopo X giorni dall'invio (default 30)
+// — promemoria follow-up (usa follow_up_at calcolato dal DB tramite trigger)
 // — colloqui imminenti con anticipo notify_days_before
 // — corsi imminenti con anticipo notify_days_before
 import { differenceInCalendarDays, parseISO } from "date-fns";
@@ -23,8 +23,10 @@ interface AppRow {
   agency: string | null;
   role: string;
   applied_at: string;
+  follow_up_at?: string | null;
   follow_up_days?: number | null;
   status: string;
+  archived_at?: string | null;
 }
 interface InterviewRow {
   id: string;
@@ -53,20 +55,24 @@ export function buildNotifications(
   const out: AppNotification[] = [];
 
   for (const a of apps) {
-    if (!["in_attesa", "da_valutare"].includes(a.status)) continue;
-    const days = a.follow_up_days ?? 30;
-    const applied = parseISO(a.applied_at);
-    const elapsed = differenceInCalendarDays(today, applied);
-    if (elapsed >= days) {
+    if (a.archived_at) continue; // Archiviate → niente promemoria
+    if (!["in_attesa", "da_valutare"].includes(a.status)) continue; // Solo stati attivi
+    // Usa follow_up_at calcolato dal DB se presente, altrimenti fallback applied + days
+    const target = a.follow_up_at
+      ? parseISO(a.follow_up_at)
+      : new Date(parseISO(a.applied_at).getTime() + (a.follow_up_days ?? 30) * 86400000);
+    const days = differenceInCalendarDays(target, today);
+    if (days <= 0) {
+      const elapsed = -days;
       out.push({
         id: `app-${a.id}`,
         kind: "follow_up",
-        title: `Promemoria follow-up`,
+        title: elapsed === 0 ? "Follow-up oggi" : `Follow-up scaduto da ${elapsed}gg`,
         subtitle: `${a.company || a.agency || "—"} • ${a.role}`,
-        date: a.applied_at,
-        daysFromNow: -elapsed,
+        date: a.follow_up_at ?? a.applied_at,
+        daysFromNow: days,
         route: `/applications/${a.id}`,
-        urgent: elapsed >= days + 7,
+        urgent: elapsed >= 7,
       });
     }
   }
@@ -93,7 +99,6 @@ export function buildNotifications(
   for (const c of courses) {
     if (["completato", "rifiutato"].includes(c.status)) continue;
     const anticipo = c.notify_days_before ?? 1;
-    // Notifica scadenza iscrizione
     if (c.enrollment_deadline && ["interessato", "iscritto"].includes(c.status)) {
       const dl = parseISO(c.enrollment_deadline);
       const days = differenceInCalendarDays(dl, today);
@@ -110,7 +115,6 @@ export function buildNotifications(
         });
       }
     }
-    // Notifica inizio corso
     if (c.start_date) {
       const sd = parseISO(c.start_date);
       const days = differenceInCalendarDays(sd, today);
@@ -132,26 +136,65 @@ export function buildNotifications(
   return out.sort((a, b) => a.daysFromNow - b.daysFromNow);
 }
 
-// Web Push permission helper (best-effort, no backend SW required)
-export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (!("Notification" in window)) return "denied";
-  if (Notification.permission === "granted" || Notification.permission === "denied") {
-    return Notification.permission;
-  }
-  return await Notification.requestPermission();
+// ============= Web Push (best-effort) =============
+const PUSH_PREF_KEY = "push.enabled";
+const PUSH_LAST_SHOWN = "push.lastShown";
+
+export function pushSupported(): boolean {
+  return typeof window !== "undefined" && "Notification" in window;
 }
 
+export function pushPermission(): NotificationPermission {
+  if (!pushSupported()) return "denied";
+  return Notification.permission;
+}
+
+export function pushEnabled(): boolean {
+  return pushSupported() && Notification.permission === "granted" && localStorage.getItem(PUSH_PREF_KEY) === "1";
+}
+
+export async function enablePush(): Promise<NotificationPermission> {
+  if (!pushSupported()) return "denied";
+  let perm = Notification.permission;
+  if (perm === "default") perm = await Notification.requestPermission();
+  if (perm === "granted") localStorage.setItem(PUSH_PREF_KEY, "1");
+  return perm;
+}
+
+export function disablePush() {
+  localStorage.setItem(PUSH_PREF_KEY, "0");
+}
+
+/** Mostra notifica nativa solo se l'utente l'ha esplicitamente abilitata e non è già stata mostrata di recente. */
 export function showLocalNotification(n: AppNotification) {
-  if (typeof window === "undefined" || !("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
+  if (!pushEnabled()) return;
   try {
-    const notif = new Notification(n.title, { body: n.subtitle, tag: n.id });
+    const shownMap: Record<string, number> = JSON.parse(localStorage.getItem(PUSH_LAST_SHOWN) || "{}");
+    const last = shownMap[n.id] || 0;
+    // throttle: max una notifica per item ogni 6 ore
+    if (Date.now() - last < 6 * 3600_000) return;
+    const notif = new Notification(n.title, {
+      body: n.subtitle,
+      tag: n.id,
+      icon: "/favicon.ico",
+    });
     notif.onclick = () => {
       window.focus();
       window.location.href = n.route;
       notif.close();
     };
+    shownMap[n.id] = Date.now();
+    localStorage.setItem(PUSH_LAST_SHOWN, JSON.stringify(shownMap));
   } catch {
     // ignore
   }
+}
+
+/** True se la PWA gira in modalità standalone (Home iOS / installata Android). */
+export function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  // iOS
+  // @ts-ignore
+  if (window.navigator.standalone === true) return true;
+  return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
 }

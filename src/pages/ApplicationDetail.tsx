@@ -17,7 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft, Archive as ArchiveIcon, RotateCcw } from "lucide-react";
 import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 const STATUSES: AppStatus[] = ["da_valutare", "in_attesa", "colloquio", "positiva", "negativa"];
@@ -158,6 +158,21 @@ export default function ApplicationDetail() {
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Candidatura eliminata" });
     navigate("/applications");
+  };
+
+  const toggleArchive = async () => {
+    if (!id || isNew) return;
+    const archiving = !form.archived_at;
+    const { error } = await supabase
+      .from("applications")
+      .update({ archived_at: archiving ? new Date().toISOString() : null })
+      .eq("id", id);
+    if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
+    toast({
+      title: archiving ? "Archiviata" : "Ripristinata",
+      description: archiving ? "Verrà eliminata automaticamente fra 90 giorni." : undefined,
+    });
+    navigate(archiving ? "/applications" : "/archive");
   };
 
   const convertTo = async (kind: EntityKind) => {
@@ -349,6 +364,21 @@ export default function ApplicationDetail() {
             </AlertDialog>
           )}
         </div>
+
+        {!isNew && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={toggleArchive}
+            className="w-full rounded-xl h-11"
+          >
+            {form.archived_at ? (
+              <><RotateCcw className="h-4 w-4 mr-2" /> Ripristina nelle attive</>
+            ) : (
+              <><ArchiveIcon className="h-4 w-4 mr-2" /> Archivia candidatura</>
+            )}
+          </Button>
+        )}
       </div>
     </MobileShell>
   );
