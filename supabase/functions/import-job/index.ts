@@ -85,37 +85,59 @@ function sourceFromUrl(url: string): string | undefined {
 }
 
 async function fetchDirect(url: string) {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
-    },
-    redirect: "follow",
-  });
-
-  const html = await res.text();
-  return {
-    ok: res.ok,
-    status: res.status,
-    finalUrl: res.url || url,
-    html,
-  };
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+      },
+      redirect: "follow",
+    });
+    const html = await res.text();
+    return { ok: res.ok, status: res.status, finalUrl: res.url || url, html };
+  } catch (e) {
+    return { ok: false, status: 0, finalUrl: url, html: "" };
+  }
 }
 
+/**
+ * r.jina.ai vuole `https://r.jina.ai/<URL_COMPLETO_INCLUSO_SCHEMA>`.
+ * Il vecchio formato `r.jina.ai/http://${url}` perdeva https → 308 / contenuto vuoto su Indeed.
+ */
 async function fetchViaJina(url: string) {
-  const target = `https://r.jina.ai/http://${url}`;
-  const res = await fetch(target, {
-    headers: {
-      "User-Agent": "Mozilla/5.0",
-      "Accept": "text/plain, text/markdown;q=0.9, */*;q=0.8",
-    },
-  });
-  return {
-    ok: res.ok,
-    status: res.status,
-    text: await res.text(),
-  };
+  try {
+    const target = `https://r.jina.ai/${url}`;
+    const res = await fetch(target, {
+      headers: {
+        "Accept": "text/plain, text/markdown;q=0.9, */*;q=0.8",
+        "X-Return-Format": "markdown",
+      },
+    });
+    return { ok: res.ok, status: res.status, text: await res.text() };
+  } catch {
+    return { ok: false, status: 0, text: "" };
+  }
+}
+
+/**
+ * Indeed blocca lo scraping diretto (403/blank). Costruisce variante viewjob desktop/mobile
+ * e tenta sempre via Jina che esegue il rendering lato server.
+ */
+function indeedVariants(url: string): string[] {
+  try {
+    const u = new URL(url);
+    const jk = u.searchParams.get("jk") || u.searchParams.get("vjk");
+    const variants = [url];
+    if (jk) {
+      variants.push(`https://${u.hostname}/viewjob?jk=${jk}`);
+      variants.push(`https://it.indeed.com/viewjob?jk=${jk}`);
+      variants.push(`https://it.indeed.com/m/viewjob?jk=${jk}`);
+    }
+    return [...new Set(variants)];
+  } catch {
+    return [url];
+  }
 }
 
 function extractJsonLdText(html: string) {
