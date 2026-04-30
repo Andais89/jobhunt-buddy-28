@@ -302,11 +302,24 @@ Deno.serve(async (req) => {
     }
 
     const safeUrl = normalizeSpace(url);
+    const isIndeed = /indeed\./i.test(safeUrl);
     let direct: Awaited<ReturnType<typeof fetchDirect>> | null = null;
     let jina: Awaited<ReturnType<typeof fetchViaJina>> | null = null;
 
-    try { direct = await fetchDirect(safeUrl); } catch { direct = null; }
-    try { jina = await fetchViaJina(safeUrl); } catch { jina = null; }
+    if (isIndeed) {
+      // Indeed: cycle through variants until one yields useful content via Jina.
+      const variants = indeedVariants(safeUrl);
+      for (const v of variants) {
+        const j = await fetchViaJina(v);
+        if (j.ok && j.text && j.text.length > 400) { jina = j; break; }
+        if (!jina && j.text) jina = j;
+      }
+      // Direct fetch is unlikely to work but try anyway for JSON-LD.
+      direct = await fetchDirect(safeUrl);
+    } else {
+      direct = await fetchDirect(safeUrl);
+      jina = await fetchViaJina(safeUrl);
+    }
 
     const context = buildContext(safeUrl, direct, jina);
     const foundEmails = extractEmails(context);
