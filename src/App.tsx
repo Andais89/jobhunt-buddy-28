@@ -14,6 +14,7 @@ import Interviews from "./pages/Interviews";
 import Courses from "./pages/Courses";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
+import Archive from "./pages/Archive";
 import NotFound from "./pages/NotFound";
 
 const Guarded = ({ children }: { children: React.ReactNode }) => (
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/applications/:id" element={<Guarded><ApplicationDetail /></Guarded>} />
             <Route path="/interviews" element={<Guarded><Interviews /></Guarded>} />
             <Route path="/courses" element={<Guarded><Courses /></Guarded>} />
+            <Route path="/archive" element={<Guarded><Archive /></Guarded>} />
             <Route path="/reports" element={<Guarded><Reports /></Guarded>} />
             <Route path="/profile" element={<Guarded><Profile /></Guarded>} />
             <Route path="*" element={<NotFound />} />
