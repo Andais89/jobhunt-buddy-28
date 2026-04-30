@@ -160,6 +160,21 @@ export default function ApplicationDetail() {
     navigate("/applications");
   };
 
+  const toggleArchive = async () => {
+    if (!id || isNew) return;
+    const archiving = !form.archived_at;
+    const { error } = await supabase
+      .from("applications")
+      .update({ archived_at: archiving ? new Date().toISOString() : null })
+      .eq("id", id);
+    if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
+    toast({
+      title: archiving ? "Archiviata" : "Ripristinata",
+      description: archiving ? "Verrà eliminata automaticamente fra 90 giorni." : undefined,
+    });
+    navigate(archiving ? "/applications" : "/archive");
+  };
+
   const convertTo = async (kind: EntityKind) => {
     if (!user || !id || isNew || kind === "application") return;
     setConverting(kind);
