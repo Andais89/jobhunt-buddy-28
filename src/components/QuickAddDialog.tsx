@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,8 +25,9 @@ const COURSE_STATUSES: { v: CourseStatus; l: string }[] = [
 
 type Entity = "candidatura" | "corso";
 
-export function QuickAddDialog({ open, onOpenChange, onCreated }: {
+export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, autoImport }: {
   open: boolean; onOpenChange: (v: boolean) => void; onCreated?: () => void;
+  initialLink?: string; autoImport?: boolean;
 }) {
   const { user } = useAuth();
   const [entity, setEntity] = useState<Entity>("candidatura");
@@ -57,6 +58,19 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
   const [courseDeadline, setCourseDeadline] = useState("");
   const [courseStatus, setCourseStatus] = useState<CourseStatus>("interessato");
 
+  // Pre-fill link and optionally trigger import when opened from clipboard banner
+  useEffect(() => {
+    if (open && initialLink) {
+      setEntity("candidatura");
+      setLink(initialLink);
+      if (autoImport) {
+        // small delay so the dialog renders before invoking
+        setTimeout(() => { void importFromLinkValue(initialLink); }, 150);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialLink, autoImport]);
+
   const reset = () => {
     setEntity("candidatura");
     setCompany(""); setAgency(""); setRole(""); setLocation(""); setContractType("");
@@ -67,11 +81,11 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
     setCourseDeadline(""); setCourseStatus("interessato");
   };
 
-  const importFromLink = async () => {
-    if (!link.trim()) return;
+  const importFromLinkValue = async (url: string) => {
+    if (!url.trim()) return;
     setImporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("import-job", { body: { url: link.trim() } });
+      const { data, error } = await supabase.functions.invoke("import-job", { body: { url: url.trim() } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data.company) setCompany(data.company);
@@ -88,11 +102,16 @@ export function QuickAddDialog({ open, onOpenChange, onCreated }: {
       if (data.applied_at) setAppliedAt(data.applied_at);
       toast({ title: "Importazione completata" });
     } catch (e: any) {
-      toast({ title: "Importazione non riuscita", description: e.message, variant: "destructive" });
+      toast({
+        title: "Importazione non riuscita",
+        description: e?.message || "Impossibile leggere automaticamente. Puoi salvare manualmente.",
+        variant: "destructive",
+      });
     } finally {
       setImporting(false);
     }
   };
+  const importFromLink = () => importFromLinkValue(link);
 
   const saveApplication = async () => {
     if (!user) return;

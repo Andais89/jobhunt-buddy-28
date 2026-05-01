@@ -110,26 +110,42 @@ export default function Dashboard() {
       {/* Notifiche / Promemoria */}
       {notifications.length > 0 && (
         <section className="px-6 mt-8">
-          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-3 border-b border-linen pb-2 flex items-center gap-2">
-            <Bell className="h-3 w-3" /> Promemoria ({notifications.length})
-          </h3>
+          <div className="flex items-center justify-between mb-3 border-b border-linen pb-2">
+            <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground flex items-center gap-2">
+              <Bell className="h-3 w-3" /> Promemoria ({notifications.length})
+            </h3>
+            <button
+              onClick={() => navigate("/notifications")}
+              className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground hover:text-foreground"
+            >
+              Vedi tutti
+            </button>
+          </div>
           <ul className="space-y-2">
-            {notifications.slice(0, 5).map(n => (
-              <li key={n.id}>
-                <button
-                  onClick={() => navigate(n.route)}
-                  className={`w-full text-left p-4 rounded-2xl border transition flex items-center gap-3 ${
-                    n.urgent ? "border-destructive/30 bg-destructive/5" : "border-linen bg-card hover:bg-secondary/40"
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{n.title}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{n.subtitle}</p>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                </button>
-              </li>
-            ))}
+            {notifications.slice(0, 5).map(n => {
+              const isOld = n.kind === "follow_up" && n.age === "old";
+              return (
+                <li key={n.id}>
+                  <button
+                    onClick={() => navigate(n.route)}
+                    className={`w-full text-left p-4 rounded-2xl border transition flex items-center gap-3 ${
+                      n.urgent ? "border-destructive/30 bg-destructive/5" : "border-linen bg-card hover:bg-secondary/40"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium truncate">{n.title}</p>
+                        {isOld && (
+                          <span className="text-[9px] uppercase tracking-editorial font-bold px-1.5 py-0.5 rounded bg-destructive/15 text-destructive">vecchio</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">{n.subtitle}</p>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

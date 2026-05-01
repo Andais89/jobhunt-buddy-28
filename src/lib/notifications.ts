@@ -24,6 +24,7 @@ function safeParseISODate(input: string | null | undefined): Date | null {
 }
 
 export type NotificationKind = "follow_up" | "interview" | "course";
+export type AgeBucket = "recent" | "overdue" | "old";
 
 export interface AppNotification {
   id: string;
@@ -34,6 +35,47 @@ export interface AppNotification {
   daysFromNow: number; // negative = past
   route: string;
   urgent: boolean;
+  /** For follow-ups: how aged the overdue is. */
+  age?: AgeBucket;
+  /** Refers to source entity id (application/interview/course). */
+  entityId: string;
+}
+
+// ---- snooze / done state in localStorage ----
+const SNOOZE_KEY = "notif.snoozedUntil"; // { [id]: epochMs }
+const DONE_KEY = "notif.done";           // { [id]: epochMs }
+
+function readMap(key: string): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; }
+}
+function writeMap(key: string, m: Record<string, number>) {
+  localStorage.setItem(key, JSON.stringify(m));
+}
+export function snoozeNotification(id: string, days = 1) {
+  const m = readMap(SNOOZE_KEY);
+  m[id] = Date.now() + days * 86400000;
+  writeMap(SNOOZE_KEY, m);
+}
+export function markNotificationDone(id: string) {
+  const m = readMap(DONE_KEY);
+  m[id] = Date.now();
+  writeMap(DONE_KEY, m);
+}
+export function clearNotificationState(id: string) {
+  for (const k of [SNOOZE_KEY, DONE_KEY]) {
+    const m = readMap(k); delete m[id]; writeMap(k, m);
+  }
+}
+function isSnoozed(id: string): boolean {
+  const m = readMap(SNOOZE_KEY);
+  const until = m[id];
+  return !!until && until > Date.now();
+}
+function isDone(id: string): boolean {
+  const m = readMap(DONE_KEY);
+  const ts = m[id];
+  // "done" lasts 7 days, then notification can re-appear if condition still holds
+  return !!ts && Date.now() - ts < 7 * 86400000;
 }
 
 interface AppRow {
@@ -97,8 +139,11 @@ export function buildNotifications(
       const elapsed = -days;
       // Safety cap anche sul ritardo follow-up
       if (elapsed > 120) continue;
+      const id = `app-${a.id}`;
+      const age: AgeBucket = elapsed === 0 ? "recent" : elapsed > 30 ? "old" : "overdue";
       out.push({
-        id: `app-${a.id}`,
+        id,
+        entityId: a.id,
         kind: "follow_up",
         title: elapsed === 0 ? "Follow-up oggi" : `Follow-up scaduto da ${elapsed}gg`,
         subtitle: `${a.company || a.agency || "—"} • ${a.role}`,
@@ -106,6 +151,7 @@ export function buildNotifications(
         daysFromNow: days,
         route: `/applications/${a.id}`,
         urgent: elapsed >= 7,
+        age,
       });
     }
   }
@@ -118,6 +164,7 @@ export function buildNotifications(
     if (days <= anticipo && days >= -1) {
       out.push({
         id: `intv-${i.id}`,
+        entityId: i.id,
         kind: "interview",
         title: days <= 0 ? "Colloquio oggi" : days === 1 ? "Colloquio domani" : `Colloquio fra ${days}gg`,
         subtitle: `${i.company}${i.role ? ` • ${i.role}` : ""}`,
@@ -138,6 +185,7 @@ export function buildNotifications(
       if (days <= anticipo + 6 && days >= 0) {
         out.push({
           id: `course-dl-${c.id}`,
+          entityId: c.id,
           kind: "course",
           title: days === 0 ? "Iscrizione corso scade oggi" : `Iscrizione fra ${days}gg`,
           subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
@@ -154,6 +202,7 @@ export function buildNotifications(
       if (days <= anticipo && days >= 0) {
         out.push({
           id: `course-start-${c.id}`,
+          entityId: c.id,
           kind: "course",
           title: days === 0 ? "Corso inizia oggi" : days === 1 ? "Corso inizia domani" : `Corso inizia fra ${days}gg`,
           subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
@@ -166,7 +215,9 @@ export function buildNotifications(
     }
   }
 
-  return out.sort((a, b) => a.daysFromNow - b.daysFromNow);
+  // Filter snoozed/done
+  const filtered = out.filter(n => !isSnoozed(n.id) && !isDone(n.id));
+  return filtered.sort((a, b) => a.daysFromNow - b.daysFromNow);
 }
 
 // ============= Web Push (best-effort) =============
