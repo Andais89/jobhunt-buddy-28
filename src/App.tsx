@@ -28,9 +28,6 @@ const Guarded = ({ children }: { children: React.ReactNode }) => (
   </RequireAuth>
 );
 
-const Guarded = ({ children }: { children: React.ReactNode }) => (
-  <RequireAuth><BiometricGate>{children}</BiometricGate></RequireAuth>
-);
 
 const queryClient = new QueryClient();
 
@@ -48,6 +45,7 @@ const App = () => (
             <Route path="/applications/:id" element={<Guarded><ApplicationDetail /></Guarded>} />
             <Route path="/interviews" element={<Guarded><Interviews /></Guarded>} />
             <Route path="/courses" element={<Guarded><Courses /></Guarded>} />
+            <Route path="/notifications" element={<Guarded><Notifications /></Guarded>} />
             <Route path="/archive" element={<Guarded><Archive /></Guarded>} />
             <Route path="/reports" element={<Guarded><Reports /></Guarded>} />
             <Route path="/profile" element={<Guarded><Profile /></Guarded>} />
