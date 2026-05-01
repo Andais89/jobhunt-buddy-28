@@ -220,65 +220,6 @@ export function buildNotifications(
   return filtered.sort((a, b) => a.daysFromNow - b.daysFromNow);
 }
 
-  for (const i of interviews) {
-    if (i.outcome !== "in_attesa") continue;
-    const sched = parseISO(i.scheduled_at);
-    const days = differenceInCalendarDays(sched, today);
-    const anticipo = i.notify_days_before ?? 1;
-    if (days <= anticipo && days >= -1) {
-      out.push({
-        id: `intv-${i.id}`,
-        kind: "interview",
-        title: days <= 0 ? "Colloquio oggi" : days === 1 ? "Colloquio domani" : `Colloquio fra ${days}gg`,
-        subtitle: `${i.company}${i.role ? ` • ${i.role}` : ""}`,
-        date: i.scheduled_at,
-        daysFromNow: days,
-        route: `/interviews?focus=${i.id}`,
-        urgent: days <= 1,
-      });
-    }
-  }
-
-  for (const c of courses) {
-    if (["completato", "rifiutato"].includes(c.status)) continue;
-    const anticipo = c.notify_days_before ?? 1;
-    if (c.enrollment_deadline && ["interessato", "iscritto"].includes(c.status)) {
-      const dl = parseISO(c.enrollment_deadline);
-      const days = differenceInCalendarDays(dl, today);
-      if (days <= anticipo + 6 && days >= 0) {
-        out.push({
-          id: `course-dl-${c.id}`,
-          kind: "course",
-          title: days === 0 ? "Iscrizione corso scade oggi" : `Iscrizione fra ${days}gg`,
-          subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
-          date: c.enrollment_deadline,
-          daysFromNow: days,
-          route: `/courses?focus=${c.id}`,
-          urgent: days <= 2,
-        });
-      }
-    }
-    if (c.start_date) {
-      const sd = parseISO(c.start_date);
-      const days = differenceInCalendarDays(sd, today);
-      if (days <= anticipo && days >= 0) {
-        out.push({
-          id: `course-start-${c.id}`,
-          kind: "course",
-          title: days === 0 ? "Corso inizia oggi" : days === 1 ? "Corso inizia domani" : `Corso inizia fra ${days}gg`,
-          subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
-          date: c.start_date,
-          daysFromNow: days,
-          route: `/courses?focus=${c.id}`,
-          urgent: days <= 1,
-        });
-      }
-    }
-  }
-
-  return out.sort((a, b) => a.daysFromNow - b.daysFromNow);
-}
-
 // ============= Web Push (best-effort) =============
 const PUSH_PREF_KEY = "push.enabled";
 const PUSH_LAST_SHOWN = "push.lastShown";
