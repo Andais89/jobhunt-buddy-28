@@ -139,8 +139,11 @@ export function buildNotifications(
       const elapsed = -days;
       // Safety cap anche sul ritardo follow-up
       if (elapsed > 120) continue;
+      const id = `app-${a.id}`;
+      const age: AgeBucket = elapsed === 0 ? "recent" : elapsed > 30 ? "old" : "overdue";
       out.push({
-        id: `app-${a.id}`,
+        id,
+        entityId: a.id,
         kind: "follow_up",
         title: elapsed === 0 ? "Follow-up oggi" : `Follow-up scaduto da ${elapsed}gg`,
         subtitle: `${a.company || a.agency || "—"} • ${a.role}`,
@@ -148,9 +151,74 @@ export function buildNotifications(
         daysFromNow: days,
         route: `/applications/${a.id}`,
         urgent: elapsed >= 7,
+        age,
       });
     }
   }
+
+  for (const i of interviews) {
+    if (i.outcome !== "in_attesa") continue;
+    const sched = parseISO(i.scheduled_at);
+    const days = differenceInCalendarDays(sched, today);
+    const anticipo = i.notify_days_before ?? 1;
+    if (days <= anticipo && days >= -1) {
+      out.push({
+        id: `intv-${i.id}`,
+        entityId: i.id,
+        kind: "interview",
+        title: days <= 0 ? "Colloquio oggi" : days === 1 ? "Colloquio domani" : `Colloquio fra ${days}gg`,
+        subtitle: `${i.company}${i.role ? ` • ${i.role}` : ""}`,
+        date: i.scheduled_at,
+        daysFromNow: days,
+        route: `/interviews?focus=${i.id}`,
+        urgent: days <= 1,
+      });
+    }
+  }
+
+  for (const c of courses) {
+    if (["completato", "rifiutato"].includes(c.status)) continue;
+    const anticipo = c.notify_days_before ?? 1;
+    if (c.enrollment_deadline && ["interessato", "iscritto"].includes(c.status)) {
+      const dl = parseISO(c.enrollment_deadline);
+      const days = differenceInCalendarDays(dl, today);
+      if (days <= anticipo + 6 && days >= 0) {
+        out.push({
+          id: `course-dl-${c.id}`,
+          entityId: c.id,
+          kind: "course",
+          title: days === 0 ? "Iscrizione corso scade oggi" : `Iscrizione fra ${days}gg`,
+          subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
+          date: c.enrollment_deadline,
+          daysFromNow: days,
+          route: `/courses?focus=${c.id}`,
+          urgent: days <= 2,
+        });
+      }
+    }
+    if (c.start_date) {
+      const sd = parseISO(c.start_date);
+      const days = differenceInCalendarDays(sd, today);
+      if (days <= anticipo && days >= 0) {
+        out.push({
+          id: `course-start-${c.id}`,
+          entityId: c.id,
+          kind: "course",
+          title: days === 0 ? "Corso inizia oggi" : days === 1 ? "Corso inizia domani" : `Corso inizia fra ${days}gg`,
+          subtitle: `${c.name}${c.provider ? ` • ${c.provider}` : ""}`,
+          date: c.start_date,
+          daysFromNow: days,
+          route: `/courses?focus=${c.id}`,
+          urgent: days <= 1,
+        });
+      }
+    }
+  }
+
+  // Filter snoozed/done
+  const filtered = out.filter(n => !isSnoozed(n.id) && !isDone(n.id));
+  return filtered.sort((a, b) => a.daysFromNow - b.daysFromNow);
+}
 
   for (const i of interviews) {
     if (i.outcome !== "in_attesa") continue;
