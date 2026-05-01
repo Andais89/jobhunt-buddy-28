@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { RequireAuth } from "@/components/RequireAuth";
 import { BiometricGate } from "@/components/BiometricGate";
+import { ClipboardImporter } from "@/components/ClipboardImporter";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Applications from "./pages/Applications";
@@ -15,7 +16,17 @@ import Courses from "./pages/Courses";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import Archive from "./pages/Archive";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
+
+const Guarded = ({ children }: { children: React.ReactNode }) => (
+  <RequireAuth>
+    <BiometricGate>
+      <ClipboardImporter />
+      {children}
+    </BiometricGate>
+  </RequireAuth>
+);
 
 const Guarded = ({ children }: { children: React.ReactNode }) => (
   <RequireAuth><BiometricGate>{children}</BiometricGate></RequireAuth>
