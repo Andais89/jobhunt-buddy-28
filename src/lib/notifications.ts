@@ -24,6 +24,7 @@ function safeParseISODate(input: string | null | undefined): Date | null {
 }
 
 export type NotificationKind = "follow_up" | "interview" | "course";
+export type AgeBucket = "recent" | "overdue" | "old";
 
 export interface AppNotification {
   id: string;
@@ -34,6 +35,47 @@ export interface AppNotification {
   daysFromNow: number; // negative = past
   route: string;
   urgent: boolean;
+  /** For follow-ups: how aged the overdue is. */
+  age?: AgeBucket;
+  /** Refers to source entity id (application/interview/course). */
+  entityId: string;
+}
+
+// ---- snooze / done state in localStorage ----
+const SNOOZE_KEY = "notif.snoozedUntil"; // { [id]: epochMs }
+const DONE_KEY = "notif.done";           // { [id]: epochMs }
+
+function readMap(key: string): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; }
+}
+function writeMap(key: string, m: Record<string, number>) {
+  localStorage.setItem(key, JSON.stringify(m));
+}
+export function snoozeNotification(id: string, days = 1) {
+  const m = readMap(SNOOZE_KEY);
+  m[id] = Date.now() + days * 86400000;
+  writeMap(SNOOZE_KEY, m);
+}
+export function markNotificationDone(id: string) {
+  const m = readMap(DONE_KEY);
+  m[id] = Date.now();
+  writeMap(DONE_KEY, m);
+}
+export function clearNotificationState(id: string) {
+  for (const k of [SNOOZE_KEY, DONE_KEY]) {
+    const m = readMap(k); delete m[id]; writeMap(k, m);
+  }
+}
+function isSnoozed(id: string): boolean {
+  const m = readMap(SNOOZE_KEY);
+  const until = m[id];
+  return !!until && until > Date.now();
+}
+function isDone(id: string): boolean {
+  const m = readMap(DONE_KEY);
+  const ts = m[id];
+  // "done" lasts 7 days, then notification can re-appear if condition still holds
+  return !!ts && Date.now() - ts < 7 * 86400000;
 }
 
 interface AppRow {
