@@ -34,6 +34,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
   initialLink?: string; autoImport?: boolean;
 }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [entity, setEntity] = useState<Entity>("candidatura");
 
   // App fields
@@ -53,6 +54,17 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
   const [appliedAt, setAppliedAt] = useState(new Date().toISOString().slice(0, 10));
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // AI Match
+  const [jobDescription, setJobDescription] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [matchScore, setMatchScore] = useState<number | null>(null);
+  const [gapAnalysis, setGapAnalysis] = useState<string[] | null>(null);
+  const [showJDInput, setShowJDInput] = useState(false);
+
+  // Duplicate
+  const [duplicate, setDuplicate] = useState<DuplicateMatch | null>(null);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
 
   // Course fields
   const [courseName, setCourseName] = useState("");
