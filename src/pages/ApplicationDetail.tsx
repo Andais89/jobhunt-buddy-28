@@ -267,6 +267,28 @@ export default function ApplicationDetail() {
       }
     >
       <div className="px-6 space-y-5">
+        {/* Duplicate alert */}
+        {duplicate && (
+          <Alert variant="destructive" className="rounded-2xl">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="text-sm">Attenzione: ti sei già candidato per questa posizione!</AlertTitle>
+            <AlertDescription className="text-xs space-y-2">
+              <p>
+                {duplicate.reason === "url" ? "Stesso link annuncio" : "Stessa coppia Azienda + Ruolo"} •{" "}
+                <strong>{duplicate.company || duplicate.agency}</strong> — {duplicate.role}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button type="button" size="sm" variant="outline" className="h-7 rounded-lg text-xs" onClick={() => navigate(`/applications/${duplicate.id}`)}>
+                  Apri esistente
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="h-7 rounded-lg text-xs" onClick={() => setDuplicateOverride(true)} disabled={duplicateOverride}>
+                  {duplicateOverride ? "Salvataggio sbloccato" : "Aggiungi comunque"}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Import */}
         <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
           <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Import smart</p>
@@ -277,9 +299,14 @@ export default function ApplicationDetail() {
               onChange={(e) => set("job_url", e.target.value)}
               className="rounded-xl"
             />
-            <Button type="button" variant="outline" onClick={importLink} disabled={importing || !form.job_url} className="rounded-xl shrink-0">
+            <Button type="button" variant="outline" onClick={importLink} disabled={importing || !form.job_url} className="rounded-xl shrink-0" title="Fetch dal link">
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             </Button>
+            {form.job_url && (
+              <a href={form.job_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-10 px-3 rounded-xl border border-input hover:bg-secondary shrink-0" title="Apri annuncio">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
           </div>
           <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={importing} className="w-full rounded-xl">
             <Camera className="h-4 w-4 mr-2" /> {importing ? "Lettura…" : "Carica screenshot (OCR)"}
@@ -287,6 +314,84 @@ export default function ApplicationDetail() {
           <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => {
             const f = e.target.files?.[0]; if (f) importImage(f); e.target.value = "";
           }} />
+        </div>
+
+        {/* AI Match Score & Gap Analysis */}
+        <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">AI Match Score</p>
+            <MatchScoreBadge score={form.match_score} />
+          </div>
+          {showJDInput ? (
+            <Textarea
+              rows={4}
+              placeholder="Incolla qui la Job Description completa..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              className="rounded-xl resize-none text-xs"
+            />
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              {form.job_summary ? "Userò la descrizione del lavoro qui sotto. " : ""}
+              <button type="button" onClick={() => setShowJDInput(true)} className="underline">
+                Incolla manualmente la Job Description
+              </button>
+            </p>
+          )}
+          <Button type="button" variant="outline" onClick={analyzeMatch} disabled={analyzing} className="w-full rounded-xl">
+            {analyzing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            {form.match_score !== null && form.match_score !== undefined ? "Ricalcola Match" : "Calcola Match Score"}
+          </Button>
+          {form.gap_analysis && Array.isArray(form.gap_analysis) && form.gap_analysis.length > 0 && (
+            <div className="pt-1">
+              <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-1.5">Gap analysis</p>
+              <ul className="space-y-1">
+                {(form.gap_analysis as string[]).map((g, i) => (
+                  <li key={i} className="text-xs flex gap-1.5"><span className="text-muted-foreground">•</span><span>{g}</span></li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Interview Prep */}
+        <div className="border border-linen bg-card p-4 space-y-3 rounded-2xl">
+          <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">Preparazione colloquio</p>
+          <Field label="Nome intervistatore">
+            <Input
+              value={form.interviewer_name ?? ""}
+              onChange={(e) => set("interviewer_name", e.target.value)}
+              placeholder="Mario Rossi"
+              className="rounded-xl"
+            />
+          </Field>
+          {form.interviewer_name?.trim() && (
+            <a
+              href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(form.interviewer_name.trim() + (form.company ? " " + form.company : ""))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs text-accent hover:underline"
+            >
+              <Linkedin className="h-3.5 w-3.5" /> Cerca su LinkedIn
+            </a>
+          )}
+          <Field label="LinkedIn intervistatore (opzionale)">
+            <Input
+              value={form.interviewer_linkedin ?? ""}
+              onChange={(e) => set("interviewer_linkedin", e.target.value)}
+              placeholder="https://www.linkedin.com/in/..."
+              className="rounded-xl"
+            />
+          </Field>
+          <Field label="Domande previste / Note di prep">
+            <Textarea
+              rows={4}
+              value={form.interview_questions ?? ""}
+              onChange={(e) => set("interview_questions", e.target.value)}
+              placeholder="• Parlami di te&#10;• Perché vuoi lavorare qui?&#10;• ..."
+              className="rounded-xl resize-none"
+            />
+          </Field>
         </div>
 
         {/* Tipo voce */}
