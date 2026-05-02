@@ -274,11 +274,68 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
               <Field label="Link annuncio (opzionale)">
                 <div className="flex gap-2">
                   <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." className="rounded-xl" />
-                  <Button type="button" variant="outline" onClick={importFromLink} disabled={importing || !link.trim()} className="rounded-xl shrink-0">
+                  <Button type="button" variant="outline" onClick={importFromLink} disabled={importing || !link.trim()} className="rounded-xl shrink-0" title="Fetch automatico dal link">
                     {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   </Button>
                 </div>
               </Field>
+
+              {/* Duplicate alert */}
+              {duplicate && (
+                <Alert variant="destructive" className="rounded-xl">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="text-sm">Attenzione: ti sei già candidato per questa posizione!</AlertTitle>
+                  <AlertDescription className="text-xs space-y-2">
+                    <p>
+                      {duplicate.reason === "url" ? "Stesso link annuncio già salvato" : "Stessa coppia Azienda + Ruolo già presente"} •{" "}
+                      <strong>{duplicate.company || duplicate.agency}</strong> — {duplicate.role}
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button type="button" size="sm" variant="outline" className="h-7 rounded-lg text-xs" onClick={() => { onOpenChange(false); navigate(`/applications/${duplicate.id}`); }}>
+                        Apri esistente
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" className="h-7 rounded-lg text-xs" onClick={() => setDuplicateOverride(true)} disabled={duplicateOverride}>
+                        {duplicateOverride ? "Pronto a salvare" : "Aggiungi comunque"}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Match Score / Gap Analysis */}
+              <div className="rounded-xl border border-linen bg-paper p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground">AI Match Score</p>
+                  {matchScore !== null && <MatchScoreBadge score={matchScore} />}
+                </div>
+                {showJDInput || (!link.trim() && matchScore === null) ? (
+                  <Textarea
+                    rows={3}
+                    placeholder="Incolla qui la Job Description per calcolare il match..."
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    className="rounded-xl resize-none text-xs"
+                  />
+                ) : (
+                  <button type="button" onClick={() => setShowJDInput(true)} className="text-[11px] text-muted-foreground underline">
+                    Incolla manualmente la Job Description
+                  </button>
+                )}
+                <Button type="button" variant="outline" size="sm" onClick={analyzeMatch} disabled={analyzing} className="w-full h-9 rounded-lg text-xs">
+                  {analyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Sparkles className="h-3.5 w-3.5 mr-2" />}
+                  {matchScore !== null ? "Ricalcola Match" : "Calcola Match Score"}
+                </Button>
+                {gapAnalysis && gapAnalysis.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-1">Gap analysis</p>
+                    <ul className="space-y-1">
+                      {gapAnalysis.slice(0, 5).map((g, i) => (
+                        <li key={i} className="text-[11px] text-foreground flex gap-1.5"><span className="text-muted-foreground">•</span><span>{g}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
               <Field label="Azienda"><Input value={company} onChange={(e) => setCompany(e.target.value)} className="rounded-xl" placeholder="Azienda finale" autoFocus /></Field>
               <Field label="Agenzia">
