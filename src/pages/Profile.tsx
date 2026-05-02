@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   biometricAvailable,
   biometricEnvSupported,
@@ -14,7 +19,7 @@ import {
   pushSupported, pushPermission, pushEnabled,
   enablePush, disablePush, isStandalone,
 } from "@/lib/notifications";
-import { Fingerprint, Info, Bell } from "lucide-react";
+import { Fingerprint, Info, Bell, User as UserIcon, Loader2 } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
