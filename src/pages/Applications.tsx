@@ -280,12 +280,26 @@ export default function Applications() {
                     <p className="text-xs text-muted-foreground truncate">{a.role}{a.location ? ` • ${a.location}` : ""}</p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <StatusBadge status={a.status} />
+                      <MatchScoreBadge score={a.match_score} />
                       <span className="text-[10px] text-muted-foreground">{format(parseISO(a.applied_at), "dd MMM yyyy")}</span>
                       {a.salary_amount && (
                         <span className="text-[10px] text-muted-foreground">• €{a.salary_amount.toLocaleString("it-IT")}{a.salary_period === "Mensile" ? "/mese" : "/anno"}</span>
                       )}
                     </div>
                   </button>
+                  {a.job_url && (
+                    <a
+                      href={a.job_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition"
+                      title="Apri annuncio originale"
+                      aria-label="Apri annuncio originale"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger className="shrink-0 px-2.5 py-1.5 text-[10px] uppercase tracking-editorial border border-linen hover:bg-secondary rounded-xl">
                       Azioni
