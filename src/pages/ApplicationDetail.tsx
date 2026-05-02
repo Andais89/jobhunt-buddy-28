@@ -46,6 +46,11 @@ export default function ApplicationDetail() {
   });
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [jobDescription, setJobDescription] = useState("");
+  const [showJDInput, setShowJDInput] = useState(false);
+  const [duplicate, setDuplicate] = useState<DuplicateMatch | null>(null);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
   const [converting, setConverting] = useState<EntityKind | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
