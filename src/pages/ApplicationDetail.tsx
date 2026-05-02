@@ -136,12 +136,49 @@ export default function ApplicationDetail() {
     } finally { setImporting(false); }
   };
 
+  const analyzeMatch = async () => {
+    if (!user) return;
+    const jd = (jobDescription.trim() || form.job_summary?.trim() || form.notes?.trim() || "");
+    if (jd.length < 30) {
+      toast({ title: "Job Description troppo corta", description: "Incolla almeno 30 caratteri di descrizione.", variant: "destructive" });
+      setShowJDInput(true);
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const { data: profile } = await supabase.from("profiles").select("cv_text,skills,experience_summary").eq("user_id", user.id).maybeSingle();
+      const profile_text = profile
+        ? [profile.cv_text, profile.skills && `Skills: ${profile.skills}`, profile.experience_summary && `Esperienza: ${profile.experience_summary}`].filter(Boolean).join("\n\n")
+        : "";
+      const { data, error } = await supabase.functions.invoke("match-analyze", {
+        body: { job_text: jd, profile_text, company: form.company, role: form.role },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setForm(p => ({
+        ...p,
+        match_score: typeof data.match_score === "number" ? data.match_score : p.match_score,
+        gap_analysis: Array.isArray(data.gap_analysis) ? data.gap_analysis : p.gap_analysis,
+        job_summary: p.job_summary || data.job_summary || null,
+      }));
+      toast({ title: "Analisi completata", description: `Match Score: ${data.match_score}/100` });
+    } catch (e: any) {
+      toast({ title: "Analisi non riuscita", description: e?.message || "Riprova.", variant: "destructive" });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const save = async () => {
     if (!user || !form.role?.trim()) {
       toast({ title: "Mancano dati", description: "Il ruolo è richiesto.", variant: "destructive" }); return;
     }
     if (!form.company?.trim() && !form.agency?.trim()) {
       toast({ title: "Mancano dati", description: "Indica almeno Azienda o Agenzia.", variant: "destructive" }); return;
+    }
+    if (duplicate && !duplicateOverride) {
+      toast({ title: "Candidatura duplicata", description: "Conferma 'Aggiungi comunque' per continuare.", variant: "destructive" });
+      return;
     }
     setBusy(true);
     const payload = {
@@ -167,7 +204,12 @@ export default function ApplicationDetail() {
       priority: (form.priority || "media") as AppPriority,
       follow_up_at: form.follow_up_at || null,
       follow_up_days: form.follow_up_days ?? 30,
-    };
+      match_score: form.match_score ?? null,
+      gap_analysis: form.gap_analysis ?? null,
+      interviewer_name: form.interviewer_name || null,
+      interviewer_linkedin: form.interviewer_linkedin || null,
+      interview_questions: form.interview_questions || null,
+    } as any;
     const { error } = isNew
       ? await supabase.from("applications").insert(payload)
       : await supabase.from("applications").update(payload).eq("id", id!);
