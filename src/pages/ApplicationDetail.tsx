@@ -511,8 +511,8 @@ export default function ApplicationDetail() {
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button onClick={save} disabled={busy} className="flex-1 rounded-xl h-11">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
+          <Button onClick={save} disabled={busy || (!!duplicate && !duplicateOverride)} className="flex-1 rounded-xl h-11">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (duplicate && !duplicateOverride ? "Risolvi duplicato" : "Salva")}
           </Button>
           {!isNew && (
             <AlertDialog>
