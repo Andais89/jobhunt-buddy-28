@@ -412,8 +412,8 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
             </>
           )}
 
-          <Button onClick={save} disabled={saving} className="w-full rounded-xl">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
+          <Button onClick={save} disabled={saving || (entity === "candidatura" && !!duplicate && !duplicateOverride)} className="w-full rounded-xl">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (entity === "candidatura" && duplicate && !duplicateOverride ? "Risolvi duplicato per salvare" : "Salva")}
           </Button>
         </div>
       </DialogContent>
