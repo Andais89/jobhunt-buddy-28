@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   biometricAvailable,
   biometricEnvSupported,
@@ -14,7 +19,7 @@ import {
   pushSupported, pushPermission, pushEnabled,
   enablePush, disablePush, isStandalone,
 } from "@/lib/notifications";
-import { Fingerprint, Info, Bell } from "lucide-react";
+import { Fingerprint, Info, Bell, User as UserIcon, Loader2 } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -27,13 +32,46 @@ export default function Profile() {
   const standalone = isStandalone();
   const pushOk = pushSupported();
 
+  // Profilo candidato (per Match Score AI)
+  const [displayName, setDisplayName] = useState("");
+  const [cvText, setCvText] = useState("");
+  const [skills, setSkills] = useState("");
+  const [experience, setExperience] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
   useEffect(() => {
     document.title = "Profilo — Regia Carriera";
     biometricAvailable().then(setAvailable);
     if (user) setEnabled(biometricEnabledForUser(user.id));
     setPushOn(pushEnabled());
     setPushPerm(pushPermission());
+    if (user) {
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          setDisplayName(data.display_name ?? "");
+          setCvText(data.cv_text ?? "");
+          setSkills(data.skills ?? "");
+          setExperience(data.experience_summary ?? "");
+        }
+      });
+    }
   }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    const payload = {
+      user_id: user.id,
+      display_name: displayName.trim() || null,
+      cv_text: cvText.trim() || null,
+      skills: skills.trim() || null,
+      experience_summary: experience.trim() || null,
+    };
+    const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
+    setSavingProfile(false);
+    if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Profilo salvato", description: "Verrà usato per il Match Score AI." });
+  };
 
   const toggle = async (next: boolean) => {
     if (!user) return;
@@ -102,6 +140,39 @@ export default function Profile() {
           <div className="rounded-2xl border border-linen bg-paper p-4">
             <p className="text-xs text-muted-foreground">Email</p>
             <p className="text-sm font-medium mt-1 break-all">{user?.email}</p>
+          </div>
+        </section>
+
+        <section>
+          <p className="text-[10px] uppercase tracking-editorial text-muted-foreground mb-3">Profilo candidato</p>
+          <div className="rounded-2xl border border-linen bg-paper p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
+                <UserIcon className="h-5 w-5" strokeWidth={1.5} />
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Questi dati vengono usati dall'AI per calcolare il <strong>Match Score</strong> e la <strong>Gap Analysis</strong> sulle candidature.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Nome</Label>
+              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-xl" placeholder="Es. Mario Rossi" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Skills principali</Label>
+              <Textarea rows={2} value={skills} onChange={(e) => setSkills(e.target.value)} className="rounded-xl resize-none" placeholder="React, TypeScript, Node.js, SQL..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Esperienza in sintesi</Label>
+              <Textarea rows={3} value={experience} onChange={(e) => setExperience(e.target.value)} className="rounded-xl resize-none" placeholder="Es. 3 anni come frontend developer in startup SaaS..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">CV completo (opzionale)</Label>
+              <Textarea rows={6} value={cvText} onChange={(e) => setCvText(e.target.value)} className="rounded-xl resize-none text-xs" placeholder="Incolla qui il testo del tuo CV per analisi più precise..." />
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile} className="w-full rounded-xl">
+              {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva profilo"}
+            </Button>
           </div>
         </section>
 
