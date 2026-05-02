@@ -12,7 +12,7 @@ import {
   WORK_MODES, CONTRACT_TYPES, HOURS_OPTIONS, SALARY_PERIODS,
 } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { findDuplicateApplication, DuplicateMatch } from "@/lib/duplicates";
 import { MatchScoreBadge } from "@/components/MatchScoreBadge";
