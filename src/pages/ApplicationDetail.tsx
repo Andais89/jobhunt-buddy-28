@@ -17,7 +17,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft, Archive as ArchiveIcon, RotateCcw } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, Camera, Loader2, ArrowRightLeft, Archive as ArchiveIcon, RotateCcw, ExternalLink, AlertTriangle, Linkedin } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { MatchScoreBadge } from "@/components/MatchScoreBadge";
+import { findDuplicateApplication, DuplicateMatch } from "@/lib/duplicates";
 import { convertEntity, entityRoute, EntityKind } from "@/lib/convertEntity";
 
 const STATUSES: AppStatus[] = ["da_valutare", "in_attesa", "colloquio", "positiva", "negativa"];
