@@ -166,20 +166,33 @@ export default function Dashboard() {
         ) : (
           <ul className="space-y-5">
             {recent.map(a => (
-              <li key={a.id}>
+              <li key={a.id} className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/applications/${a.id}`)}
-                  className="w-full flex items-center justify-between text-left group"
+                  className="flex-1 flex items-center justify-between text-left group min-w-0"
                 >
                   <div className="min-w-0 pr-3">
                     <p className="font-medium text-sm truncate">{a.company?.trim() || a.agency?.trim() || "—"}</p>
                     <p className="text-xs text-muted-foreground truncate">{a.role}</p>
+                    <div className="mt-1"><MatchScoreBadge score={a.match_score} /></div>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] uppercase tracking-editorial font-semibold">{STATUS_LABEL[a.status]}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{format(parseISO(a.applied_at), "dd MMM")}</p>
                   </div>
                 </button>
+                {a.job_url && (
+                  <a
+                    href={a.job_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition"
+                    title="Apri annuncio originale"
+                    aria-label="Apri annuncio originale"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
               </li>
             ))}
           </ul>
