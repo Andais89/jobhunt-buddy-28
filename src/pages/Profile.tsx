@@ -32,13 +32,46 @@ export default function Profile() {
   const standalone = isStandalone();
   const pushOk = pushSupported();
 
+  // Profilo candidato (per Match Score AI)
+  const [displayName, setDisplayName] = useState("");
+  const [cvText, setCvText] = useState("");
+  const [skills, setSkills] = useState("");
+  const [experience, setExperience] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
   useEffect(() => {
     document.title = "Profilo — Regia Carriera";
     biometricAvailable().then(setAvailable);
     if (user) setEnabled(biometricEnabledForUser(user.id));
     setPushOn(pushEnabled());
     setPushPerm(pushPermission());
+    if (user) {
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          setDisplayName(data.display_name ?? "");
+          setCvText(data.cv_text ?? "");
+          setSkills(data.skills ?? "");
+          setExperience(data.experience_summary ?? "");
+        }
+      });
+    }
   }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    const payload = {
+      user_id: user.id,
+      display_name: displayName.trim() || null,
+      cv_text: cvText.trim() || null,
+      skills: skills.trim() || null,
+      experience_summary: experience.trim() || null,
+    };
+    const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
+    setSavingProfile(false);
+    if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Profilo salvato", description: "Verrà usato per il Match Score AI." });
+  };
 
   const toggle = async (next: boolean) => {
     if (!user) return;
