@@ -144,6 +144,39 @@ export default function Profile() {
         </section>
 
         <section>
+          <p className="text-[10px] uppercase tracking-editorial text-muted-foreground mb-3">Profilo candidato</p>
+          <div className="rounded-2xl border border-linen bg-paper p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
+                <UserIcon className="h-5 w-5" strokeWidth={1.5} />
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Questi dati vengono usati dall'AI per calcolare il <strong>Match Score</strong> e la <strong>Gap Analysis</strong> sulle candidature.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Nome</Label>
+              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="rounded-xl" placeholder="Es. Mario Rossi" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Skills principali</Label>
+              <Textarea rows={2} value={skills} onChange={(e) => setSkills(e.target.value)} className="rounded-xl resize-none" placeholder="React, TypeScript, Node.js, SQL..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Esperienza in sintesi</Label>
+              <Textarea rows={3} value={experience} onChange={(e) => setExperience(e.target.value)} className="rounded-xl resize-none" placeholder="Es. 3 anni come frontend developer in startup SaaS..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">CV completo (opzionale)</Label>
+              <Textarea rows={6} value={cvText} onChange={(e) => setCvText(e.target.value)} className="rounded-xl resize-none text-xs" placeholder="Incolla qui il testo del tuo CV per analisi più precise..." />
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile} className="w-full rounded-xl">
+              {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva profilo"}
+            </Button>
+          </div>
+        </section>
+
+        <section>
           <p className="text-[10px] uppercase tracking-editorial text-muted-foreground mb-3">Notifiche</p>
           <div className="rounded-2xl border border-linen bg-paper p-4 flex items-center gap-4">
             <div className="size-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
