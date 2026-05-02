@@ -26,11 +26,16 @@ export type Database = {
           created_at: string
           follow_up_at: string | null
           follow_up_days: number
+          gap_analysis: Json | null
           hours_week: string | null
           id: string
+          interview_questions: string | null
+          interviewer_linkedin: string | null
+          interviewer_name: string | null
           job_summary: string | null
           job_url: string | null
           location: string | null
+          match_score: number | null
           notes: string | null
           priority: Database["public"]["Enums"]["application_priority"]
           role: string
@@ -55,11 +60,16 @@ export type Database = {
           created_at?: string
           follow_up_at?: string | null
           follow_up_days?: number
+          gap_analysis?: Json | null
           hours_week?: string | null
           id?: string
+          interview_questions?: string | null
+          interviewer_linkedin?: string | null
+          interviewer_name?: string | null
           job_summary?: string | null
           job_url?: string | null
           location?: string | null
+          match_score?: number | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["application_priority"]
           role: string
@@ -84,11 +94,16 @@ export type Database = {
           created_at?: string
           follow_up_at?: string | null
           follow_up_days?: number
+          gap_analysis?: Json | null
           hours_week?: string | null
           id?: string
+          interview_questions?: string | null
+          interviewer_linkedin?: string | null
+          interviewer_name?: string | null
           job_summary?: string | null
           job_url?: string | null
           location?: string | null
+          match_score?: number | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["application_priority"]
           role?: string
@@ -207,6 +222,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          cv_text: string | null
+          display_name: string | null
+          experience_summary: string | null
+          id: string
+          skills: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cv_text?: string | null
+          display_name?: string | null
+          experience_summary?: string | null
+          id?: string
+          skills?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cv_text?: string | null
+          display_name?: string | null
+          experience_summary?: string | null
+          id?: string
+          skills?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
