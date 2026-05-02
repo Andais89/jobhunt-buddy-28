@@ -77,6 +77,20 @@ export interface Application {
   follow_up_at: string | null;
   follow_up_days: number;
   archived_at: string | null;
+  match_score: number | null;
+  gap_analysis: string[] | null;
+  interviewer_name: string | null;
+  interviewer_linkedin: string | null;
+  interview_questions: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  cv_text: string | null;
+  skills: string | null;
+  experience_summary: string | null;
 }
