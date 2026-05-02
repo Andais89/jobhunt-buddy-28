@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MobileShell } from "@/components/MobileShell";
 import { Application, AppStatus, STATUS_LABEL } from "@/lib/types";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, ExternalLink } from "lucide-react";
+import { MatchScoreBadge } from "@/components/MatchScoreBadge";
 import { buildNotifications, AppNotification, showLocalNotification, pushEnabled } from "@/lib/notifications";
 
 const KPIS: { key: AppStatus | "totale"; label: string; emphasis?: "accent" | "muted" }[] = [
