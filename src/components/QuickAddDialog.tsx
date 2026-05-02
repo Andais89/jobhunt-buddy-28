@@ -95,7 +95,25 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
     setAppliedAt(new Date().toISOString().slice(0, 10));
     setCourseName(""); setCourseProvider(""); setCourseStart(""); setCourseEnd("");
     setCourseDeadline(""); setCourseStatus("interessato");
+    setJobDescription(""); setMatchScore(null); setGapAnalysis(null); setShowJDInput(false);
+    setDuplicate(null); setDuplicateOverride(false);
   };
+
+  // Re-check duplicates when key fields change
+  useEffect(() => {
+    if (!user || entity !== "candidatura") return;
+    const t = setTimeout(async () => {
+      const dup = await findDuplicateApplication({
+        userId: user.id,
+        jobUrl: link,
+        company,
+        role,
+      });
+      setDuplicate(dup);
+      if (!dup) setDuplicateOverride(false);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [user, entity, link, company, role]);
 
   const importFromLinkValue = async (url: string) => {
     if (!url.trim()) return;
@@ -116,18 +134,51 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
       if (data.source) setSource(data.source);
       if (data.notes) setNotes(data.notes);
       if (data.applied_at) setAppliedAt(data.applied_at);
-      toast({ title: "Importazione completata" });
+      if (data.description) setJobDescription(data.description);
+      toast({ title: "Importazione completata", description: "Ora puoi calcolare il Match Score." });
     } catch (e: any) {
       toast({
         title: "Importazione non riuscita",
-        description: e?.message || "Impossibile leggere automaticamente. Puoi salvare manualmente.",
+        description: (e?.message || "Impossibile leggere automaticamente.") + " Incolla la Job Description manualmente per analizzarla.",
         variant: "destructive",
       });
+      setShowJDInput(true);
     } finally {
       setImporting(false);
     }
   };
   const importFromLink = () => importFromLinkValue(link);
+
+  const analyzeMatch = async () => {
+    if (!user) return;
+    const jd = jobDescription.trim() || notes.trim();
+    if (jd.length < 30) {
+      toast({ title: "Job Description troppo corta", description: "Incolla almeno una descrizione di 30+ caratteri.", variant: "destructive" });
+      setShowJDInput(true);
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      // Load profile
+      const { data: profile } = await supabase.from("profiles").select("cv_text,skills,experience_summary").eq("user_id", user.id).maybeSingle();
+      const profile_text = profile
+        ? [profile.cv_text, profile.skills && `Skills: ${profile.skills}`, profile.experience_summary && `Esperienza: ${profile.experience_summary}`].filter(Boolean).join("\n\n")
+        : "";
+      const { data, error } = await supabase.functions.invoke("match-analyze", {
+        body: { job_text: jd, profile_text, company, role },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMatchScore(typeof data.match_score === "number" ? data.match_score : null);
+      setGapAnalysis(Array.isArray(data.gap_analysis) ? data.gap_analysis : null);
+      if (data.job_summary && !notes.trim()) setNotes(data.job_summary);
+      toast({ title: "Analisi completata", description: `Match Score: ${data.match_score}/100` });
+    } catch (e: any) {
+      toast({ title: "Analisi non riuscita", description: e?.message || "Riprova.", variant: "destructive" });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const saveApplication = async () => {
     if (!user) return;
@@ -137,6 +188,10 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
     }
     if (!role.trim()) {
       toast({ title: "Dati mancanti", description: "Il ruolo è richiesto.", variant: "destructive" });
+      return;
+    }
+    if (duplicate && !duplicateOverride) {
+      toast({ title: "Candidatura duplicata", description: "Conferma 'Aggiungi comunque' per continuare.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -156,7 +211,9 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
       status,
       job_url: link.trim() || null,
       applied_at: appliedAt || new Date().toISOString().slice(0, 10),
-    });
+      match_score: matchScore,
+      gap_analysis: gapAnalysis,
+    } as any);
     setSaving(false);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Salvata", description: `${company.trim() || agency.trim()} • ${role}` });
