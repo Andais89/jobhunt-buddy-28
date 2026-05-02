@@ -64,6 +64,23 @@ export default function ApplicationDetail() {
     })();
   }, [id, isNew, navigate]);
 
+  // Duplicate detection (debounced)
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(async () => {
+      const dup = await findDuplicateApplication({
+        userId: user.id,
+        jobUrl: form.job_url,
+        company: form.company,
+        role: form.role,
+        excludeId: isNew ? null : id ?? null,
+      });
+      setDuplicate(dup);
+      if (!dup) setDuplicateOverride(false);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [user, form.job_url, form.company, form.role, id, isNew]);
+
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm(p => ({ ...p, [k]: v }));
 
   const applyImport = (data: any) => {
