@@ -7,7 +7,8 @@ import { MobileShell } from "@/components/MobileShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Application, AppStatus, STATUS_LABEL } from "@/lib/types";
 import { Input } from "@/components/ui/input";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal, ExternalLink } from "lucide-react";
+import { MatchScoreBadge } from "@/components/MatchScoreBadge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
