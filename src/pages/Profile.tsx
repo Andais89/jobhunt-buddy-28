@@ -19,7 +19,9 @@ import {
   pushSupported, pushPermission, pushEnabled,
   enablePush, disablePush, isStandalone,
 } from "@/lib/notifications";
-import { Fingerprint, Info, Bell, User as UserIcon, Loader2 } from "lucide-react";
+import { Fingerprint, Info, Bell, User as UserIcon, Loader2, FileUp } from "lucide-react";
+import { extractPdfText } from "@/lib/pdf";
+import { useRef } from "react";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -37,7 +39,10 @@ export default function Profile() {
   const [cvText, setCvText] = useState("");
   const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
+  const [languages, setLanguages] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [parsingCv, setParsingCv] = useState(false);
+  const cvFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.title = "Profilo — Regia Carriera";
@@ -52,6 +57,7 @@ export default function Profile() {
           setCvText(data.cv_text ?? "");
           setSkills(data.skills ?? "");
           setExperience(data.experience_summary ?? "");
+          setLanguages((data as any).languages ?? "");
         }
       });
     }
@@ -66,7 +72,8 @@ export default function Profile() {
       cv_text: cvText.trim() || null,
       skills: skills.trim() || null,
       experience_summary: experience.trim() || null,
-    };
+      languages: languages.trim() || null,
+    } as any;
     const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
     setSavingProfile(false);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
