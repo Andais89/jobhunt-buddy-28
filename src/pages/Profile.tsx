@@ -21,7 +21,6 @@ import {
 } from "@/lib/notifications";
 import { Fingerprint, Info, Bell, User as UserIcon, Loader2, FileUp } from "lucide-react";
 import { extractPdfText } from "@/lib/pdf";
-import { extractPdfText } from "@/lib/pdf";
 
 export default function Profile() {
   const { user } = useAuth();
