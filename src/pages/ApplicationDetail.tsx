@@ -431,6 +431,10 @@ export default function ApplicationDetail() {
               className="rounded-xl resize-none"
             />
           </Field>
+          <Button type="button" variant="outline" onClick={generateQuestions} disabled={genQs} className="w-full rounded-xl">
+            {genQs ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            Genera domande con AI
+          </Button>
         </div>
 
         {/* Tipo voce */}
