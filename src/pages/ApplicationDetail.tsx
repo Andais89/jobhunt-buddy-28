@@ -115,6 +115,11 @@ export default function ApplicationDetail() {
       if (data?.error) throw new Error(data.error);
       applyImport(data);
       toast({ title: "Dati importati" });
+      // Auto-trigger match analysis if we got a job description
+      const jd = data?.description || data?.notes;
+      if (jd && String(jd).length > 30) {
+        setTimeout(() => analyzeMatchWith(jd, data?.company ?? form.company, data?.role ?? form.role), 50);
+      }
     } catch (e: any) {
       toast({ title: "Import non riuscito", description: e.message, variant: "destructive" });
     } finally { setImporting(false); }
@@ -136,22 +141,21 @@ export default function ApplicationDetail() {
     } finally { setImporting(false); }
   };
 
-  const analyzeMatch = async () => {
+  const analyzeMatchWith = async (jd: string, company?: string | null, role?: string | null) => {
     if (!user) return;
-    const jd = (jobDescription.trim() || form.job_summary?.trim() || form.notes?.trim() || "");
-    if (jd.length < 30) {
-      toast({ title: "Job Description troppo corta", description: "Incolla almeno 30 caratteri di descrizione.", variant: "destructive" });
+    if (!jd || jd.trim().length < 30) {
+      toast({ title: "Job Description troppo corta", description: "Incolla almeno 30 caratteri.", variant: "destructive" });
       setShowJDInput(true);
       return;
     }
     setAnalyzing(true);
     try {
-      const { data: profile } = await supabase.from("profiles").select("cv_text,skills,experience_summary").eq("user_id", user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("cv_text,skills,experience_summary,languages").eq("user_id", user.id).maybeSingle();
       const profile_text = profile
-        ? [profile.cv_text, profile.skills && `Skills: ${profile.skills}`, profile.experience_summary && `Esperienza: ${profile.experience_summary}`].filter(Boolean).join("\n\n")
+        ? [profile.cv_text, profile.skills && `Skills: ${profile.skills}`, profile.experience_summary && `Esperienza: ${profile.experience_summary}`, (profile as any).languages && `Lingue: ${(profile as any).languages}`].filter(Boolean).join("\n\n")
         : "";
       const { data, error } = await supabase.functions.invoke("match-analyze", {
-        body: { job_text: jd, profile_text, company: form.company, role: form.role },
+        body: { job_text: jd, profile_text, company: company ?? form.company, role: role ?? form.role },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -166,6 +170,41 @@ export default function ApplicationDetail() {
       toast({ title: "Analisi non riuscita", description: e?.message || "Riprova.", variant: "destructive" });
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const analyzeMatch = async () => {
+    const jd = (jobDescription.trim() || form.job_summary?.trim() || form.notes?.trim() || "");
+    return analyzeMatchWith(jd);
+  };
+
+  const [genQs, setGenQs] = useState(false);
+  const generateQuestions = async () => {
+    if (!user) return;
+    const jd = (form.job_summary?.trim() || jobDescription.trim() || form.notes?.trim() || "");
+    if (jd.length < 30) {
+      toast({ title: "Manca la Job Description", description: "Importa o incolla la descrizione prima.", variant: "destructive" });
+      return;
+    }
+    setGenQs(true);
+    try {
+      const { data: profile } = await supabase.from("profiles").select("skills,experience_summary").eq("user_id", user.id).maybeSingle();
+      const profile_text = profile ? [profile.skills, profile.experience_summary].filter(Boolean).join("\n") : "";
+      const { data, error } = await supabase.functions.invoke("interview-questions", {
+        body: { job_text: jd, role: form.role, company: form.company, profile_text },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const list = Array.isArray(data?.questions) ? data.questions : [];
+      if (!list.length) throw new Error("Nessuna domanda generata.");
+      const formatted = list.map((q: string) => `• ${q}`).join("\n");
+      const existing = form.interview_questions?.trim();
+      set("interview_questions", existing ? `${existing}\n${formatted}` : formatted);
+      toast({ title: "Domande generate", description: `${list.length} domande aggiunte.` });
+    } catch (e: any) {
+      toast({ title: "Generazione non riuscita", description: e?.message || "Riprova.", variant: "destructive" });
+    } finally {
+      setGenQs(false);
     }
   };
 
