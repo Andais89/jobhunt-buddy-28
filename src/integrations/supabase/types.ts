@@ -230,6 +230,7 @@ export type Database = {
           display_name: string | null
           experience_summary: string | null
           id: string
+          languages: string | null
           skills: string | null
           updated_at: string
           user_id: string
@@ -240,6 +241,7 @@ export type Database = {
           display_name?: string | null
           experience_summary?: string | null
           id?: string
+          languages?: string | null
           skills?: string | null
           updated_at?: string
           user_id: string
@@ -250,6 +252,7 @@ export type Database = {
           display_name?: string | null
           experience_summary?: string | null
           id?: string
+          languages?: string | null
           skills?: string | null
           updated_at?: string
           user_id?: string

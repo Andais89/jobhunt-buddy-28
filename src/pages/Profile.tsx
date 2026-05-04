@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MobileShell } from "@/components/MobileShell";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
@@ -19,7 +19,8 @@ import {
   pushSupported, pushPermission, pushEnabled,
   enablePush, disablePush, isStandalone,
 } from "@/lib/notifications";
-import { Fingerprint, Info, Bell, User as UserIcon, Loader2 } from "lucide-react";
+import { Fingerprint, Info, Bell, User as UserIcon, Loader2, FileUp } from "lucide-react";
+import { extractPdfText } from "@/lib/pdf";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -37,7 +38,10 @@ export default function Profile() {
   const [cvText, setCvText] = useState("");
   const [skills, setSkills] = useState("");
   const [experience, setExperience] = useState("");
+  const [languages, setLanguages] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [parsingCv, setParsingCv] = useState(false);
+  const cvFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.title = "Profilo — Regia Carriera";
@@ -52,6 +56,7 @@ export default function Profile() {
           setCvText(data.cv_text ?? "");
           setSkills(data.skills ?? "");
           setExperience(data.experience_summary ?? "");
+          setLanguages((data as any).languages ?? "");
         }
       });
     }
@@ -66,7 +71,8 @@ export default function Profile() {
       cv_text: cvText.trim() || null,
       skills: skills.trim() || null,
       experience_summary: experience.trim() || null,
-    };
+      languages: languages.trim() || null,
+    } as any;
     const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "user_id" });
     setSavingProfile(false);
     if (error) { toast({ title: "Errore", description: error.message, variant: "destructive" }); return; }
@@ -118,6 +124,27 @@ export default function Profile() {
     }
   };
 
+  const handleCvPdf = async (file: File) => {
+    setParsingCv(true);
+    try {
+      const text = await extractPdfText(file);
+      if (!text || text.length < 50) throw new Error("Nessun testo leggibile nel PDF.");
+      setCvText(text);
+      const { data, error } = await supabase.functions.invoke("extract-cv", { body: { cv_text: text } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.display_name && !displayName) setDisplayName(data.display_name);
+      if (data?.skills) setSkills(data.skills);
+      if (data?.experience_summary) setExperience(data.experience_summary);
+      if (data?.languages) setLanguages(data.languages);
+      toast({ title: "CV importato", description: "Rivedi i campi e salva." });
+    } catch (e: any) {
+      toast({ title: "Errore lettura CV", description: e?.message || "Riprova.", variant: "destructive" });
+    } finally {
+      setParsingCv(false);
+    }
+  };
+
   const helperBio = !envOk
     ? "Per attivare Face ID, apri l'app installata dalla schermata Home (Condividi → Aggiungi a Home)."
     : !available
@@ -163,12 +190,23 @@ export default function Profile() {
               <Textarea rows={2} value={skills} onChange={(e) => setSkills(e.target.value)} className="rounded-xl resize-none" placeholder="React, TypeScript, Node.js, SQL..." />
             </div>
             <div className="space-y-1.5">
+              <Label className="text-[10px] uppercase tracking-editorial">Lingue</Label>
+              <Textarea rows={2} value={languages} onChange={(e) => setLanguages(e.target.value)} className="rounded-xl resize-none" placeholder="Italiano madrelingua, Inglese B2..." />
+            </div>
+            <div className="space-y-1.5">
               <Label className="text-[10px] uppercase tracking-editorial">Esperienza in sintesi</Label>
               <Textarea rows={3} value={experience} onChange={(e) => setExperience(e.target.value)} className="rounded-xl resize-none" placeholder="Es. 3 anni come frontend developer in startup SaaS..." />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-editorial">CV completo (opzionale)</Label>
-              <Textarea rows={6} value={cvText} onChange={(e) => setCvText(e.target.value)} className="rounded-xl resize-none text-xs" placeholder="Incolla qui il testo del tuo CV per analisi più precise..." />
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-[10px] uppercase tracking-editorial">CV completo</Label>
+                <button type="button" onClick={() => cvFileRef.current?.click()} disabled={parsingCv} className="inline-flex items-center gap-1 text-[10px] uppercase tracking-editorial font-semibold text-accent hover:underline disabled:opacity-50">
+                  {parsingCv ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileUp className="h-3 w-3" />}
+                  {parsingCv ? "Analisi…" : "Carica PDF"}
+                </button>
+                <input ref={cvFileRef} type="file" accept="application/pdf" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCvPdf(f); e.target.value = ""; }} />
+              </div>
+              <Textarea rows={6} value={cvText} onChange={(e) => setCvText(e.target.value)} className="rounded-xl resize-none text-xs" placeholder="Carica il PDF o incolla qui il testo del CV..." />
             </div>
             <Button onClick={saveProfile} disabled={savingProfile} className="w-full rounded-xl">
               {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva profilo"}
