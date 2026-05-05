@@ -13,7 +13,6 @@ const SCHEMA = {
     location: { type: "string", description: "Città o località di lavoro" },
     contract_type: { type: "string", description: "Tipo di contratto" },
     salary: { type: "string", description: "Retribuzione o range salariale" },
-    applied_at: { type: "string", description: "Data candidatura in formato YYYY-MM-DD, se inferibile" },
     description: { type: "string", description: "Breve descrizione del ruolo, max 2-3 frasi" },
     notes: { type: "string", description: "Requisiti chiave o note utili" },
     source: { type: "string", description: "Portale o fonte originale" },
@@ -279,7 +278,7 @@ Deno.serve(async (req) => {
       const aiImage = await callAI([
         {
           role: "system",
-          content: "Analizza screenshot di annunci di lavoro e compila quanti più campi possibili. Distingui sempre azienda finale e agenzia. Se l'azienda finale non è esplicita, lascia vuota company e compila agency. Imposta status a in_attesa se non presente. applied_at in formato YYYY-MM-DD se deducibile, altrimenti oggi.",
+          content: "Analizza screenshot di annunci di lavoro e compila quanti più campi possibili. Distingui sempre azienda finale e agenzia. Se l'azienda finale non è esplicita, lascia vuota company e compila agency. Imposta status a in_attesa se non presente. NON estrarre alcuna data: il campo data candidatura viene gestito automaticamente.",
         },
         {
           role: "user",
@@ -331,7 +330,7 @@ Deno.serve(async (req) => {
       {
         role: "system",
         content:
-          "Sei un assistente premium per import automatico di candidature. Devi completare il form nel modo più completo possibile usando TUTTE le fonti disponibili, inclusi testo renderizzato, meta tag, JSON-LD e fallback testuali. Non fermarti al primo indizio. Regole: 1) distingui sempre azienda finale e agenzia; 2) se compare solo un'agenzia, lascia company vuoto e compila agency; 3) non duplicare mai la stessa entità in company e agency; 4) compila role, location, contract_type, description, notes, salary, work_mode, seniority_level, benefits, contact_email quando disponibili o inferibili in modo ragionevole; 5) description breve e pulita, notes focalizzate sui requisiti; 6) status di default in_attesa; 7) applied_at in formato YYYY-MM-DD se non leggibile usa la data odierna.",
+          "Sei un assistente premium per import automatico di candidature. Devi completare il form nel modo più completo possibile usando TUTTE le fonti disponibili, inclusi testo renderizzato, meta tag, JSON-LD e fallback testuali. Non fermarti al primo indizio. Regole: 1) distingui sempre azienda finale e agenzia; 2) se compare solo un'agenzia, lascia company vuoto e compila agency; 3) non duplicare mai la stessa entità in company e agency; 4) compila role, location, contract_type, description, notes, salary, work_mode, seniority_level, benefits, contact_email quando disponibili o inferibili in modo ragionevole; 5) description breve e pulita, notes focalizzate sui requisiti; 6) status di default in_attesa; 7) NON estrarre né dedurre alcuna data: la data candidatura viene impostata automaticamente lato app.",
       },
       {
         role: "user",
