@@ -150,6 +150,49 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
   };
   const importFromLink = () => importFromLinkValue(link);
 
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
+  const importFromScreenshot = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Formato non valido", description: "Carica un'immagine (PNG/JPG).", variant: "destructive" });
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: "Immagine troppo grande", description: "Max 8MB.", variant: "destructive" });
+      return;
+    }
+    setImporting(true);
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+      const { data, error } = await supabase.functions.invoke("import-job", { body: { image: dataUrl } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data.company) setCompany(data.company);
+      if (data.agency) setAgency(data.agency);
+      if (data.role) setRole(data.role);
+      if (data.location) setLocation(data.location);
+      if (data.contract_type) setContractType(data.contract_type);
+      if (data.work_mode) setWorkMode(data.work_mode);
+      if (data.salary_amount) setSalaryAmount(String(data.salary_amount));
+      if (data.salary_period) setSalaryPeriod(data.salary_period);
+      if (data.hours_week) setHoursWeek(data.hours_week);
+      if (data.source) setSource(data.source);
+      if (data.notes) setNotes(data.notes);
+      if (data.description) setJobDescription(data.description);
+      toast({ title: "Screenshot analizzato", description: "Dati estratti dall'immagine." });
+    } catch (e: any) {
+      toast({ title: "OCR non riuscito", description: e?.message || "Riprova.", variant: "destructive" });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+
   const analyzeMatch = async () => {
     if (!user) return;
     const jd = jobDescription.trim() || notes.trim();
