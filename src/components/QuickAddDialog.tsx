@@ -13,7 +13,7 @@ import {
 } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Sparkles, Loader2, AlertTriangle, ImagePlus } from "lucide-react";
-import { useRef } from "react";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { findDuplicateApplication, DuplicateMatch } from "@/lib/duplicates";
 import { MatchScoreBadge } from "@/components/MatchScoreBadge";
