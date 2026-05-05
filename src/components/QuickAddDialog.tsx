@@ -210,7 +210,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
       source: source.trim() || null,
       status,
       job_url: link.trim() || null,
-      applied_at: appliedAt || new Date().toISOString().slice(0, 10),
+      applied_at: new Date().toISOString().slice(0, 10),
       match_score: matchScore,
       gap_analysis: gapAnalysis,
     } as any);
