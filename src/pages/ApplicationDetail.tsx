@@ -226,7 +226,7 @@ export default function ApplicationDetail() {
       agency: form.agency?.trim() || null,
       role: form.role!.trim(),
       location: form.location || null,
-      applied_at: form.applied_at || new Date().toISOString().slice(0, 10),
+      applied_at: isNew ? new Date().toISOString().slice(0, 10) : (form.applied_at || new Date().toISOString().slice(0, 10)),
       source: form.source || null,
       job_url: form.job_url || null,
       contract_type: form.contract_type || null,
