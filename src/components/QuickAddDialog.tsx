@@ -133,7 +133,7 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
       if (data.hours_week) setHoursWeek(data.hours_week);
       if (data.source) setSource(data.source);
       if (data.notes) setNotes(data.notes);
-      if (data.applied_at) setAppliedAt(data.applied_at);
+      // applied_at: ignorato dall'import — usiamo sempre la data odierna al salvataggio
       if (data.description) setJobDescription(data.description);
       toast({ title: "Importazione completata", description: "Ora puoi calcolare il Match Score." });
     } catch (e: any) {
