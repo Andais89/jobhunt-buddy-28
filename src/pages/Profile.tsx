@@ -124,14 +124,24 @@ export default function Profile() {
   };
 
   const handleCvPdf = async (file: File) => {
+    if (!user) return;
     setParsingCv(true);
     try {
-      const text = await extractPdfText(file);
-      if (!text || text.length < 50) throw new Error("Nessun testo leggibile nel PDF.");
-      setCvText(text);
-      const { data, error } = await supabase.functions.invoke("extract-cv", { body: { cv_text: text } });
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      if (!isPdf) throw new Error("Carica un file PDF.");
+      if (file.size > 15 * 1024 * 1024) throw new Error("File troppo grande (max 15MB).");
+
+      // Upload to private storage bucket — folder = user.id (RLS)
+      const path = `${user.id}/cv-${Date.now()}.pdf`;
+      const { error: upErr } = await supabase.storage.from("cvs").upload(path, file, {
+        contentType: "application/pdf", upsert: true,
+      });
+      if (upErr) throw upErr;
+
+      const { data, error } = await supabase.functions.invoke("extract-cv", { body: { storage_path: path } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      if (data?.cv_text) setCvText(data.cv_text);
       if (data?.display_name && !displayName) setDisplayName(data.display_name);
       if (data?.skills) setSkills(data.skills);
       if (data?.experience_summary) setExperience(data.experience_summary);
