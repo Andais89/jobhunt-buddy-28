@@ -107,11 +107,13 @@ async function fetchDirect(url: string) {
  */
 async function fetchViaJina(url: string) {
   try {
+    // r.jina.ai requires the full URL including scheme
     const target = `https://r.jina.ai/${url}`;
     const res = await fetch(target, {
       headers: {
         "Accept": "text/plain, text/markdown;q=0.9, */*;q=0.8",
         "X-Return-Format": "markdown",
+        "X-With-Generated-Alt": "true",
       },
     });
     return { ok: res.ok, status: res.status, text: await res.text() };
@@ -121,8 +123,8 @@ async function fetchViaJina(url: string) {
 }
 
 /**
- * Indeed blocca lo scraping diretto (403/blank). Costruisce variante viewjob desktop/mobile
- * e tenta sempre via Jina che esegue il rendering lato server.
+ * Indeed blocca lo scraping diretto (403/blank). Genera tutte le varianti viewjob
+ * (desktop / mobile / italiana / .com) per massimizzare le chance via Jina.
  */
 function indeedVariants(url: string): string[] {
   try {
@@ -130,9 +132,11 @@ function indeedVariants(url: string): string[] {
     const jk = u.searchParams.get("jk") || u.searchParams.get("vjk");
     const variants = [url];
     if (jk) {
-      variants.push(`https://${u.hostname}/viewjob?jk=${jk}`);
       variants.push(`https://it.indeed.com/viewjob?jk=${jk}`);
       variants.push(`https://it.indeed.com/m/viewjob?jk=${jk}`);
+      variants.push(`https://www.indeed.com/viewjob?jk=${jk}`);
+      variants.push(`https://www.indeed.com/m/viewjob?jk=${jk}`);
+      variants.push(`https://${u.hostname}/viewjob?jk=${jk}`);
     }
     return [...new Set(variants)];
   } catch {
@@ -243,9 +247,8 @@ function normalizeResult(result: Record<string, string>, sourceUrl?: string) {
   }
 
   if (!cleaned.status) cleaned.status = "in_attesa";
-  if (!cleaned.applied_at || !/^\d{4}-\d{2}-\d{2}$/.test(cleaned.applied_at)) {
-    cleaned.applied_at = new Date().toISOString().slice(0, 10);
-  }
+  // applied_at viene sempre forzato a oggi lato client al momento del salvataggio
+  delete cleaned.applied_at;
   if (!cleaned.source && sourceUrl) {
     const inferred = sourceFromUrl(sourceUrl);
     if (inferred) cleaned.source = inferred;

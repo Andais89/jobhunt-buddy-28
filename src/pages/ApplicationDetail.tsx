@@ -96,7 +96,7 @@ export default function ApplicationDetail() {
       salary_period: data.salary_period ?? p.salary_period,
       hours_week: data.hours_week ?? p.hours_week,
       source: data.source ?? p.source,
-      applied_at: data.applied_at ?? p.applied_at,
+      // applied_at non viene importato: si usa sempre la data odierna al salvataggio
       status: data.status ?? p.status,
       job_summary: data.description ?? p.job_summary,
       notes: data.notes ?? p.notes,
@@ -226,7 +226,7 @@ export default function ApplicationDetail() {
       agency: form.agency?.trim() || null,
       role: form.role!.trim(),
       location: form.location || null,
-      applied_at: form.applied_at || new Date().toISOString().slice(0, 10),
+      applied_at: isNew ? new Date().toISOString().slice(0, 10) : (form.applied_at || new Date().toISOString().slice(0, 10)),
       source: form.source || null,
       job_url: form.job_url || null,
       contract_type: form.contract_type || null,
