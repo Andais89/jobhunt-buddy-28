@@ -321,7 +321,13 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
                   <Button type="button" variant="outline" onClick={importFromLink} disabled={importing || !link.trim()} className="rounded-xl shrink-0" title="Fetch automatico dal link">
                     {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   </Button>
+                  <Button type="button" variant="outline" onClick={() => screenshotInputRef.current?.click()} disabled={importing} className="rounded-xl shrink-0" title="Importa da screenshot (OCR)">
+                    <ImagePlus className="h-4 w-4" />
+                  </Button>
+                  <input ref={screenshotInputRef} type="file" accept="image/*" hidden
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) importFromScreenshot(f); e.target.value = ""; }} />
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Se il link non si carica, prova con uno screenshot dell'annuncio.</p>
               </Field>
 
               {/* Duplicate alert */}
