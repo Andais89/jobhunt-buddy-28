@@ -7,6 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { MobileShell } from "@/components/MobileShell";
 import { Application, STATUS_LABEL } from "@/lib/types";
 import { ChevronRight, X } from "lucide-react";
+import {
+  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
 interface CourseRow {
   id: string;
@@ -24,19 +28,23 @@ export default function Reports() {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [openCompany, setOpenCompany] = useState<string | null>(null);
 
+  const [interviewDates, setInterviewDates] = useState<string[]>([]);
+
   useEffect(() => { document.title = "Report — Regia Carriera"; }, []);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     const load = async () => {
-      const [a, c] = await Promise.all([
+      const [a, c, i] = await Promise.all([
         supabase.from("applications").select("*").order("applied_at", { ascending: false }),
         supabase.from("courses").select("id,name,provider,start_date,status"),
+        supabase.from("interviews").select("scheduled_at"),
       ]);
       if (!active) return;
       if (a.data) setApps(a.data as Application[]);
       if (c.data) setCourses(c.data as CourseRow[]);
+      if (i.data) setInterviewDates((i.data as { scheduled_at: string }[]).map(r => r.scheduled_at.slice(0, 10)));
     };
     load();
 
@@ -44,6 +52,7 @@ export default function Reports() {
       .channel(`reports-realtime-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
 
     return () => { active = false; supabase.removeChannel(channel); };
@@ -68,6 +77,34 @@ export default function Reports() {
   }, [apps]);
 
   const maxPerDay = useMemo(() => Math.max(1, ...dailyApps.map(([, list]) => list.length)), [dailyApps]);
+
+  // Trend data: last 30 calendar days, applications + interviews per day
+  const trendData = useMemo(() => {
+    const days: { date: string; label: string; Candidature: number; Colloqui: number }[] = [];
+    const appCounts = new Map<string, number>();
+    apps.forEach(a => appCounts.set(a.applied_at, (appCounts.get(a.applied_at) || 0) + 1));
+    const intCounts = new Map<string, number>();
+    interviewDates.forEach(d => intCounts.set(d, (intCounts.get(d) || 0) + 1));
+
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({
+        date: key,
+        label: format(d, "dd/MM", { locale: it }),
+        Candidature: appCounts.get(key) || 0,
+        Colloqui: intCounts.get(key) || 0,
+      });
+    }
+    return days;
+  }, [apps, interviewDates]);
+
+  const dailyAppsBarData = useMemo(
+    () => trendData.map(d => ({ label: d.label, Inviate: d.Candidature })),
+    [trendData],
+  );
 
   const topCompanies = useMemo(() => {
     const map = new Map<string, Application[]>();
@@ -107,6 +144,44 @@ export default function Reports() {
           <Stat label="Risposte" value={replied} sub={`${replyRate}%`} />
           <Stat label="Positive" value={positive} accent />
           <Stat label="In attesa" value={total - replied} />
+        </section>
+
+        {/* Trend candidature vs colloqui (line chart) */}
+        <section>
+          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
+            Trend — Candidature & Colloqui (ultimi 30 giorni)
+          </h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Line type="monotone" dataKey="Candidature" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Colloqui" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* CV inviati per giorno (bar chart) */}
+        <section>
+          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
+            CV inviati per giorno (ultimi 30 giorni)
+          </h3>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyAppsBarData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                <Bar dataKey="Inviate" fill="hsl(var(--foreground))" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </section>
 
         {/* Andamento candidature per giorno */}
