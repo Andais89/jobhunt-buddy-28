@@ -78,6 +78,34 @@ export default function Reports() {
 
   const maxPerDay = useMemo(() => Math.max(1, ...dailyApps.map(([, list]) => list.length)), [dailyApps]);
 
+  // Trend data: last 30 calendar days, applications + interviews per day
+  const trendData = useMemo(() => {
+    const days: { date: string; label: string; Candidature: number; Colloqui: number }[] = [];
+    const appCounts = new Map<string, number>();
+    apps.forEach(a => appCounts.set(a.applied_at, (appCounts.get(a.applied_at) || 0) + 1));
+    const intCounts = new Map<string, number>();
+    interviewDates.forEach(d => intCounts.set(d, (intCounts.get(d) || 0) + 1));
+
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({
+        date: key,
+        label: format(d, "dd/MM", { locale: it }),
+        Candidature: appCounts.get(key) || 0,
+        Colloqui: intCounts.get(key) || 0,
+      });
+    }
+    return days;
+  }, [apps, interviewDates]);
+
+  const dailyAppsBarData = useMemo(
+    () => trendData.map(d => ({ label: d.label, Inviate: d.Candidature })),
+    [trendData],
+  );
+
   const topCompanies = useMemo(() => {
     const map = new Map<string, Application[]>();
     apps.forEach(a => {
