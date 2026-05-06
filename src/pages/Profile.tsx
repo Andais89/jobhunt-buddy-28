@@ -131,14 +131,25 @@ export default function Profile() {
       if (!isPdf) throw new Error("Carica un file PDF.");
       if (file.size > 15 * 1024 * 1024) throw new Error("File troppo grande (max 15MB).");
 
-      // Upload to private storage bucket — folder = user.id (RLS)
-      const path = `${user.id}/cv-${Date.now()}.pdf`;
-      const { error: upErr } = await supabase.storage.from("cvs").upload(path, file, {
-        contentType: "application/pdf", upsert: true,
-      });
-      if (upErr) throw upErr;
+      // Convert file to base64 and send to parse-pdf edge function
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let bin = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      const pdfBase64 = btoa(bin);
 
-      const { data, error } = await supabase.functions.invoke("extract-cv", { body: { storage_path: path } });
+      const { data: parsed, error: parseErr } = await supabase.functions.invoke("parse-pdf", { body: { pdfBase64 } });
+      if (parseErr) throw parseErr;
+      if (parsed?.error) throw new Error(parsed.error);
+      const extractedText = String(parsed?.text || "").trim();
+      if (!extractedText) throw new Error("Nessun testo estratto dal PDF.");
+      setCvText(extractedText);
+
+      // Optional: structure with AI using existing extract-cv function
+      const { data, error } = await supabase.functions.invoke("extract-cv", { body: { cv_text: extractedText } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.cv_text) setCvText(data.cv_text);
