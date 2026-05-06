@@ -82,7 +82,7 @@ export default function Courses() {
             <p className="text-xs text-muted-foreground">Tocca + per aggiungerne uno.</p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
             {items.map(c => {
               const daysLeft = c.enrollment_deadline ? differenceInDays(parseISO(c.enrollment_deadline), new Date()) : null;
               const urgent = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0;
