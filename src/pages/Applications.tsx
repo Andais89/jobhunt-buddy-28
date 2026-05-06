@@ -255,7 +255,7 @@ export default function Applications() {
             <p className="text-xs text-muted-foreground">Tocca + in basso per iniziare.</p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
             {filtered.map(a => (
               <li key={a.id} className="bg-card border border-linen rounded-2xl p-4 shadow-soft">
                 <div className="flex gap-3 items-start">

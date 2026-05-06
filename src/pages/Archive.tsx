@@ -97,7 +97,7 @@ export default function Archive() {
             <p className="text-xs text-muted-foreground">Sposta qui le candidature ferme da oltre un mese.</p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
             {filtered.map(a => {
               const daysArchived = a.archived_at ? differenceInCalendarDays(new Date(), parseISO(a.archived_at)) : 0;
               const daysToDelete = 90 - daysArchived;
