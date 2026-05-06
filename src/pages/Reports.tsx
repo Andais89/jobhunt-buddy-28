@@ -28,19 +28,23 @@ export default function Reports() {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [openCompany, setOpenCompany] = useState<string | null>(null);
 
+  const [interviewDates, setInterviewDates] = useState<string[]>([]);
+
   useEffect(() => { document.title = "Report — Regia Carriera"; }, []);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     const load = async () => {
-      const [a, c] = await Promise.all([
+      const [a, c, i] = await Promise.all([
         supabase.from("applications").select("*").order("applied_at", { ascending: false }),
         supabase.from("courses").select("id,name,provider,start_date,status"),
+        supabase.from("interviews").select("scheduled_at"),
       ]);
       if (!active) return;
       if (a.data) setApps(a.data as Application[]);
       if (c.data) setCourses(c.data as CourseRow[]);
+      if (i.data) setInterviewDates((i.data as { scheduled_at: string }[]).map(r => r.scheduled_at.slice(0, 10)));
     };
     load();
 
@@ -48,6 +52,7 @@ export default function Reports() {
       .channel(`reports-realtime-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "applications", filter: `user_id=eq.${user.id}` }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "courses", filter: `user_id=eq.${user.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
 
     return () => { active = false; supabase.removeChannel(channel); };
