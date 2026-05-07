@@ -101,12 +101,6 @@ export default function Reports() {
     return days;
   }, [apps, interviewDates]);
 
-  const dailyAppsBarData = useMemo(
-    () => trendData.map(d => ({ label: d.label, Inviate: d.Candidature })),
-    [trendData],
-  );
-
-  const topCompanies = useMemo(() => {
     const map = new Map<string, Application[]>();
     apps.forEach(a => {
       const name = (a.company?.trim() || a.agency?.trim() || "—");
