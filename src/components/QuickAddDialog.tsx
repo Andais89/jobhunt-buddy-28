@@ -140,10 +140,12 @@ export function QuickAddDialog({ open, onOpenChange, onCreated, initialLink, aut
     } catch (e: any) {
       toast({
         title: "Importazione non riuscita",
-        description: (e?.message || "Impossibile leggere automaticamente.") + " Incolla la Job Description manualmente per analizzarla.",
+        description: (e?.message || "Impossibile leggere automaticamente.") + " Apri uno screenshot dell'annuncio come fallback.",
         variant: "destructive",
       });
       setShowJDInput(true);
+      // Fallback OCR: apri il selettore screenshot automaticamente
+      setTimeout(() => screenshotInputRef.current?.click(), 300);
     } finally {
       setImporting(false);
     }

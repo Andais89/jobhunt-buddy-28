@@ -9,6 +9,7 @@ const SUPPORTED_PATTERNS = [
 ];
 const LAST_KEY = "clipboard.lastImportedUrl";
 const DISMISSED_KEY = "clipboard.dismissedUrl";
+const SESSION_CHECKED_KEY = "clipboard.sessionChecked";
 
 function isJobUrl(text: string): string | null {
   const trimmed = text.trim();
@@ -31,6 +32,7 @@ export function ClipboardImporter() {
   const checkClipboard = async () => {
     if (!navigator.clipboard?.readText) return;
     if (document.visibilityState !== "visible") return;
+    if (sessionStorage.getItem(SESSION_CHECKED_KEY)) return;
     try {
       const text = await navigator.clipboard.readText();
       const url = isJobUrl(text);
@@ -38,6 +40,7 @@ export function ClipboardImporter() {
       const last = localStorage.getItem(LAST_KEY);
       const dismissed = localStorage.getItem(DISMISSED_KEY);
       if (url === last || url === dismissed) return;
+      sessionStorage.setItem(SESSION_CHECKED_KEY, "1");
       setDetected(url);
     } catch {
       // permission denied / not focused — silent
@@ -86,8 +89,9 @@ export function ClipboardImporter() {
               <Sparkles className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] uppercase tracking-editorial font-semibold opacity-70">Link rilevato</p>
-              <p className="text-sm truncate">Importa annuncio da {sourceName}?</p>
+              <p className="text-[11px] uppercase tracking-editorial font-semibold opacity-70">Link negli appunti</p>
+              <p className="text-sm">Abbiamo trovato un link negli appunti — Vuoi importare questo annuncio?</p>
+              <p className="text-[11px] opacity-60 truncate mt-0.5">{sourceName}</p>
             </div>
             <button
               onClick={accept}
