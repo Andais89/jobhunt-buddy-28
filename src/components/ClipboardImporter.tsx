@@ -32,6 +32,7 @@ export function ClipboardImporter() {
   const checkClipboard = async () => {
     if (!navigator.clipboard?.readText) return;
     if (document.visibilityState !== "visible") return;
+    if (sessionStorage.getItem(SESSION_CHECKED_KEY)) return;
     try {
       const text = await navigator.clipboard.readText();
       const url = isJobUrl(text);
@@ -39,6 +40,7 @@ export function ClipboardImporter() {
       const last = localStorage.getItem(LAST_KEY);
       const dismissed = localStorage.getItem(DISMISSED_KEY);
       if (url === last || url === dismissed) return;
+      sessionStorage.setItem(SESSION_CHECKED_KEY, "1");
       setDetected(url);
     } catch {
       // permission denied / not focused — silent
