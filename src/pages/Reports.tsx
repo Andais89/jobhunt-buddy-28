@@ -8,7 +8,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Application, STATUS_LABEL } from "@/lib/types";
 import { ChevronRight, X } from "lucide-react";
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
@@ -101,11 +101,6 @@ export default function Reports() {
     return days;
   }, [apps, interviewDates]);
 
-  const dailyAppsBarData = useMemo(
-    () => trendData.map(d => ({ label: d.label, Inviate: d.Candidature })),
-    [trendData],
-  );
-
   const topCompanies = useMemo(() => {
     const map = new Map<string, Application[]>();
     apps.forEach(a => {
@@ -162,24 +157,6 @@ export default function Reports() {
                 <Line type="monotone" dataKey="Candidature" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="Colloqui" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
               </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* CV inviati per giorno (bar chart) */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
-            CV inviati per giorno (ultimi 30 giorni)
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyAppsBarData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
-                <Bar dataKey="Inviate" fill="hsl(var(--foreground))" radius={[6, 6, 0, 0]} />
-              </BarChart>
             </ResponsiveContainer>
           </div>
         </section>
