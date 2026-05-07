@@ -8,7 +8,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Application, STATUS_LABEL } from "@/lib/types";
 import { ChevronRight, X } from "lucide-react";
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 
