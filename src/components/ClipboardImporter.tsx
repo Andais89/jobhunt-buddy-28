@@ -9,6 +9,7 @@ const SUPPORTED_PATTERNS = [
 ];
 const LAST_KEY = "clipboard.lastImportedUrl";
 const DISMISSED_KEY = "clipboard.dismissedUrl";
+const SESSION_CHECKED_KEY = "clipboard.sessionChecked";
 
 function isJobUrl(text: string): string | null {
   const trimmed = text.trim();
