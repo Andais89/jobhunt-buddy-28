@@ -166,24 +166,6 @@ export default function Reports() {
           </div>
         </section>
 
-        {/* CV inviati per giorno (bar chart) */}
-        <section>
-          <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
-            CV inviati per giorno (ultimi 30 giorni)
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyAppsBarData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
-                <Bar dataKey="Inviate" fill="hsl(var(--foreground))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
         {/* Andamento candidature per giorno */}
         <section>
           <h3 className="text-[10px] uppercase tracking-editorial font-semibold text-muted-foreground mb-4 border-b border-linen pb-2">
