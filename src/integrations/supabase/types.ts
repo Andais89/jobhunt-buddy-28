@@ -130,6 +130,8 @@ export type Database = {
           notes: string | null
           notify_days_before: number
           provider: string | null
+          reminder_1d_sent_at: string | null
+          reminder_1h_sent_at: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["course_status"]
           updated_at: string
@@ -146,6 +148,8 @@ export type Database = {
           notes?: string | null
           notify_days_before?: number
           provider?: string | null
+          reminder_1d_sent_at?: string | null
+          reminder_1h_sent_at?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["course_status"]
           updated_at?: string
@@ -162,6 +166,8 @@ export type Database = {
           notes?: string | null
           notify_days_before?: number
           provider?: string | null
+          reminder_1d_sent_at?: string | null
+          reminder_1h_sent_at?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["course_status"]
           updated_at?: string
@@ -176,10 +182,14 @@ export type Database = {
           company: string
           created_at: string
           id: string
+          interviewer_linkedin: string | null
+          interviewer_name: string | null
           mode: string | null
           notify_days_before: number
           outcome: Database["public"]["Enums"]["interview_outcome"]
           prep_notes: string | null
+          reminder_1d_sent_at: string | null
+          reminder_1h_sent_at: string | null
           role: string | null
           scheduled_at: string
           updated_at: string
@@ -190,10 +200,14 @@ export type Database = {
           company: string
           created_at?: string
           id?: string
+          interviewer_linkedin?: string | null
+          interviewer_name?: string | null
           mode?: string | null
           notify_days_before?: number
           outcome?: Database["public"]["Enums"]["interview_outcome"]
           prep_notes?: string | null
+          reminder_1d_sent_at?: string | null
+          reminder_1h_sent_at?: string | null
           role?: string | null
           scheduled_at: string
           updated_at?: string
@@ -204,10 +218,14 @@ export type Database = {
           company?: string
           created_at?: string
           id?: string
+          interviewer_linkedin?: string | null
+          interviewer_name?: string | null
           mode?: string | null
           notify_days_before?: number
           outcome?: Database["public"]["Enums"]["interview_outcome"]
           prep_notes?: string | null
+          reminder_1d_sent_at?: string | null
+          reminder_1h_sent_at?: string | null
           role?: string | null
           scheduled_at?: string
           updated_at?: string
@@ -255,6 +273,36 @@ export type Database = {
           languages?: string | null
           skills?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
